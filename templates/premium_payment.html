@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Pay for {{ plan_name }} | Irumanam{% endblock %}
+{% block content %}
+<section class="dashboard-section checkout-page">
+  <div class="container checkout-container">
+    <a href="{{ url_for('premium_page') }}" class="checkout-back"><i class="bi bi-arrow-left"></i> Back to plans</a>
+
+    <header class="checkout-heading">
+      <div>
+        <span class="checkout-eyebrow"><i class="bi bi-shield-check"></i> Secure manual verification</span>
+        <h1>Complete your payment</h1>
+        <p>Pay with your UPI app, then submit your payment details for verification.</p>
+      </div>
+      <span class="checkout-secure-tag"><i class="bi bi-lock-fill"></i> Secure checkout</span>
+    </header>
+
+    <div class="checkout-layout">
+      <section class="checkout-payment-card" aria-labelledby="checkout-plan-title">
+        <div class="checkout-plan-head">
+          <div class="checkout-plan-icon"><i class="bi bi-stars"></i></div>
+          <div>
+            <span class="checkout-plan-label">Your selected plan</span>
+            <h2 id="checkout-plan-title">{{ plan_name }} Premium</h2>
+          </div>
+          <span class="checkout-plan-duration">{{ months }} months</span>
+        </div>
+
+        <div class="checkout-total">
+          <span>Total to pay</span>
+          <strong>₹{{ '{:,}'.format(amount) }}</strong>
+          <small>INR</small>
+        </div>
+
+        <div class="checkout-method-title">
+          <span class="checkout-step">1</span>
+          <div><h3>Pay using any UPI app</h3><p>Scan the QR code below to make your payment.</p></div>
+        </div>
+
+        <div class="checkout-qr-panel">
+          <div class="checkout-qr-frame">
+            <img src="{{ qr_data }}" alt="UPI payment QR code for {{ plan_name }} Premium, ₹{{ '{:,}'.format(amount) }}" width="240" height="240">
+          </div>
+          <div class="checkout-upi-apps" aria-label="Supported UPI apps">
+            <span><i class="bi bi-phone"></i> GPay</span>
+            <span><i class="bi bi-phone"></i> PhonePe</span>
+            <span><i class="bi bi-phone"></i> Paytm</span>
+            <span>Other UPI apps</span>
+          </div>
+        </div>
+
+        <div class="checkout-recipient">
+          <span class="checkout-recipient-icon"><i class="bi bi-person-check"></i></span>
+          <span><small>UPI payment number</small><strong>{{ upi_number }}</strong></span>
+        </div>
+        <p class="checkout-recipient-warning"><i class="bi bi-info-circle-fill"></i> Verify the recipient details in your UPI app before paying.</p>
+      </section>
+
+      <section class="checkout-details-card" aria-labelledby="checkout-details-title">
+        <div class="checkout-method-title">
+          <span class="checkout-step">2</span>
+          <div><h2 id="checkout-details-title">Submit payment details</h2><p>Share your transaction reference and payment screenshot.</p></div>
+        </div>
+
+        <div class="checkout-note">
+          <div class="checkout-note-heading"><span><i class="bi bi-receipt"></i> Payment note</span><span class="checkout-note-required">Include with your payment</span></div>
+          <div class="checkout-note-content">
+            <code>{{ note }}</code>
+            <button type="button" class="checkout-copy" onclick="navigator.clipboard.writeText('{{ note }}')" aria-label="Copy payment note"><i class="bi bi-copy"></i><span>Copy</span></button>
+          </div>
+        </div>
+
+        <form class="checkout-form" method="post" action="{{ url_for('premium_payment_submit') }}" enctype="multipart/form-data">
+          <input type="hidden" name="plan" value="{{ plan }}">
+
+          <div class="checkout-field">
+            <label for="transaction_id"><span class="checkout-field-number">01</span> Transaction ID / UTR</label>
+            <input class="form-control" id="transaction_id" name="transaction_id" maxlength="120" required autocomplete="off" placeholder="Enter UPI transaction reference">
+            <small><i class="bi bi-info-circle"></i> Find this reference in your UPI app's payment history.</small>
+          </div>
+
+          <div class="checkout-field">
+            <label for="payment_screenshot"><span class="checkout-field-number">02</span> Payment screenshot</label>
+            <input class="form-control checkout-file" id="payment_screenshot" name="payment_screenshot" type="file" accept="image/png,image/jpeg,image/webp" required>
+            <small><i class="bi bi-paperclip"></i> PNG, JPG or WEBP. Maximum 3 MB.</small>
+          </div>
+
+          <div class="checkout-review-note"><i class="bi bi-hourglass-split"></i><span>Your plan remains inactive until admin approval.</span></div>
+          <button class="btn btn-brand checkout-submit" type="submit"><i class="bi bi-shield-check"></i> Submit for admin approval <i class="bi bi-arrow-right"></i></button>
+        </form>
+
+        <div class="checkout-footer-note"><i class="bi bi-shield-lock"></i><span>Your payment details are used to verify this subscription request.</span></div>
+      </section>
+    </div>
+    <div class="checkout-bottom-note"><i class="bi bi-check-circle-fill"></i> Payment verification is completed by the Irumanam admin team.</div>
+  </div>
+</section>
+{% endblock %}

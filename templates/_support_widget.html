@@ -1,0 +1,185 @@
+<style>
+  .chat-widget-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1050;
+    display: grid;
+    width: 58px;
+    height: 58px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #762b4b;
+    color: #fff;
+    box-shadow: 0 8px 25px rgba(80, 31, 54, .3);
+    font-size: 1.4rem;
+  }
+  .chat-widget-btn:hover { background: #591d37; color: #fff; }
+  .chat-window {
+    position: fixed;
+    right: 24px;
+    bottom: 94px;
+    z-index: 1050;
+    display: none;
+    width: 360px;
+    max-width: calc(100vw - 28px);
+    height: min(460px, calc(100dvh - 120px));
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #ece3e8;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 16px 48px rgba(38, 22, 32, .2);
+  }
+  .chat-window.active { display: flex; }
+  .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: linear-gradient(120deg, #54233d, #762b4b);
+    color: #fff;
+  }
+  .chat-header small { color: rgba(255,255,255,.72); font-size: .72rem; }
+  .chat-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 9px;
+    overflow-y: auto;
+    padding: 14px;
+    background: #faf8f9;
+  }
+  .chat-bubble {
+    max-width: 84%;
+    padding: 9px 12px;
+    border-radius: 14px;
+    font-size: .82rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+  .chat-bubble.admin {
+    align-self: flex-start;
+    border: 1px solid #eee7eb;
+    border-bottom-left-radius: 4px;
+    background: #fff;
+    color: #373039;
+  }
+  .chat-bubble.visitor {
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    background: #762b4b;
+    color: #fff;
+  }
+  .chat-footer { padding: 10px 12px; border-top: 1px solid #eee7eb; background: #fff; }
+  .chat-footer .form-control { min-width: 0; border-radius: 999px; font-size: .82rem; }
+  .chat-status { min-height: 1rem; color: #a63e50; font-size: .72rem; }
+  @media (max-width: 480px) {
+    .chat-widget-btn { right: 16px; bottom: 16px; }
+    .chat-window { right: 10px; bottom: 84px; max-width: calc(100vw - 20px); }
+  }
+</style>
+
+<button class="chat-widget-btn" type="button" id="supportChatToggle" aria-controls="supportChatWindow" aria-expanded="false" aria-label="Open support chat">
+  <i class="bi bi-chat-dots-fill"></i>
+</button>
+<section class="chat-window" id="supportChatWindow" aria-label="Irumanam support chat" aria-hidden="true">
+  <header class="chat-header">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-headset fs-4"></i>
+      <div><strong class="d-block">Irumanam Support</strong><small>Get instant answers to common questions; our team handles the rest.</small></div>
+    </div>
+    <button type="button" class="btn-close btn-close-white" id="supportChatClose" aria-label="Close chat"></button>
+  </header>
+  <div class="chat-body" id="supportChatMessages" aria-live="polite">
+    <div class="chat-bubble admin">Hello! How can we help you today?</div>
+  </div>
+  <div class="chat-footer">
+    <p class="chat-status mb-1" id="supportChatStatus" role="status"></p>
+    <form id="supportChatForm" class="d-flex gap-2">
+      <input type="text" id="supportChatInput" class="form-control form-control-sm" placeholder="Type a message..." maxlength="1000" required autocomplete="off" aria-label="Support message">
+      <button type="submit" class="btn btn-brand btn-sm px-3" aria-label="Send support message"><i class="bi bi-send"></i></button>
+    </form>
+  </div>
+</section>
+<script>
+(() => {
+  const toggle = document.getElementById("supportChatToggle");
+  const close = document.getElementById("supportChatClose");
+  const panel = document.getElementById("supportChatWindow");
+  const list = document.getElementById("supportChatMessages");
+  const form = document.getElementById("supportChatForm");
+  const input = document.getElementById("supportChatInput");
+  const status = document.getElementById("supportChatStatus");
+  if (!toggle || !panel || !list || !form || !input || !status) return;
+
+  let latestId = 0;
+  let pollTimer = null;
+  const showError = (message) => { status.textContent = message; };
+  const appendMessage = (message) => {
+    if (message.id <= latestId) return;
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble " + (message.sender_role === "visitor" ? "visitor" : "admin");
+    bubble.textContent = message.body;
+    list.appendChild(bubble);
+    latestId = message.id;
+    list.scrollTop = list.scrollHeight;
+  };
+  const loadMessages = async () => {
+    try {
+      const response = await fetch("{{ url_for('support_chat_api') }}?after=" + latestId, { headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("Unable to load support messages.");
+      const data = await response.json();
+      data.messages.forEach(appendMessage);
+      showError("");
+    } catch (error) {
+      showError(error.message || "Support chat is temporarily unavailable.");
+    }
+  };
+  const setOpen = (open) => {
+    panel.classList.toggle("active", open);
+    panel.setAttribute("aria-hidden", String(!open));
+    toggle.setAttribute("aria-expanded", String(open));
+    if (open) {
+      loadMessages();
+      input.focus();
+      if (!pollTimer) pollTimer = window.setInterval(loadMessages, 3000);
+    } else if (pollTimer) {
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  };
+  toggle.addEventListener("click", () => setOpen(!panel.classList.contains("active")));
+  close.addEventListener("click", () => setOpen(false));
+  if (new URLSearchParams(window.location.search).get("support_inquiry") === "sent") {
+    setOpen(true);
+  }
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const body = input.value.trim();
+    if (!body) return;
+    const button = form.querySelector("button");
+    button.disabled = true;
+    showError("");
+    try {
+      const response = await fetch("{{ url_for('support_chat_api') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ body })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Unable to send your message.");
+      input.value = "";
+      appendMessage(data.message);
+      if (data.auto_reply) appendMessage(data.auto_reply);
+    } catch (error) {
+      showError(error.message || "Unable to send your message. Please try again.");
+    } finally {
+      button.disabled = false;
+      input.focus();
+    }
+  });
+})();
+</script>

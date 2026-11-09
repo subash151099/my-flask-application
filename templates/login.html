@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}{{ seo_title }}{% endblock %}
+{% block content %}
+<style>
+  .login-section {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 76vh;
+    padding: clamp(36px, 6vw, 76px) 0;
+    background:
+      radial-gradient(ellipse at 10% 12%, rgba(118, 43, 75, .1), transparent 36%),
+      radial-gradient(ellipse at 92% 88%, rgba(198, 154, 80, .12), transparent 32%),
+      #fbf8f8;
+  }
+  .login-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 470px);
+    align-items: center;
+    gap: clamp(36px, 7vw, 96px);
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  .login-story {
+    max-width: 490px;
+    padding: 10px 0;
+  }
+  .login-brand-logo {
+    display: block;
+    width: auto;
+    max-width: min(230px, 75%);
+    max-height: 58px;
+    margin-bottom: 42px;
+    object-fit: contain;
+    object-position: left center;
+  }
+  .login-story .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    color: #762b4b;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .login-story h1 {
+    max-width: 480px;
+    margin: 0;
+    color: #33232c;
+    font-size: clamp(2.35rem, 5vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -.055em;
+    line-height: 1.08;
+  }
+  .login-story h1 span { color: #762b4b; }
+  .login-story-copy {
+    max-width: 430px;
+    margin: 20px 0 0;
+    color: #746870;
+    font-size: 1.04rem;
+    line-height: 1.8;
+  }
+  .login-story-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 34px;
+    color: #665761;
+    font-size: .9rem;
+  }
+  .login-story-note-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border: 1px solid #f0e2e8;
+    border-radius: 14px;
+    background: #fff;
+    color: #762b4b;
+    font-size: 1.1rem;
+  }
+  .login-card {
+    width: 100%;
+    padding: clamp(28px, 4vw, 42px);
+    border: 1px solid #eee3e8;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 24px 70px rgba(58, 34, 47, .11);
+  }
+  .login-card-heading { margin-bottom: 30px; }
+  .login-card-heading h2 {
+    margin: 0 0 7px;
+    color: #33232c;
+    font-size: 1.65rem;
+    font-weight: 800;
+    letter-spacing: -.04em;
+  }
+  .login-card-heading p {
+    margin: 0;
+    color: #81747d;
+    font-size: .93rem;
+  }
+  .login-card .form-label {
+    margin-bottom: 8px;
+    color: #443740;
+    font-size: .86rem;
+    font-weight: 700;
+  }
+  .login-card .form-control {
+    min-height: 52px;
+    border: 1px solid #e8dfe4;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #33232c;
+    font-size: .94rem;
+    box-shadow: none;
+  }
+  .login-card .form-control::placeholder { color: #a99da4; }
+  .login-card .form-control:focus {
+    border-color: #a96781;
+    box-shadow: 0 0 0 4px rgba(118, 43, 75, .1);
+  }
+  .login-card .input-group .form-control {
+    z-index: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .login-card .toggle-password {
+    min-width: 52px;
+    border: 1px solid #e8dfe4;
+    border-left: 0;
+    border-radius: 0 12px 12px 0;
+    background: #fff;
+    color: #766771;
+  }
+  .login-card .toggle-password:hover,
+  .login-card .toggle-password:focus {
+    background: #fbf6f8;
+    color: #762b4b;
+  }
+  .login-submit {
+    min-height: 52px;
+    margin-top: 4px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(120deg, #762b4b, #914260);
+    color: #fff;
+    font-size: .98rem;
+    font-weight: 750;
+    box-shadow: 0 8px 20px rgba(118, 43, 75, .2);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .login-submit:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(120deg, #591d37, #762b4b);
+    color: #fff;
+    box-shadow: 0 11px 24px rgba(118, 43, 75, .25);
+  }
+  .login-submit:focus-visible,
+  .login-card .toggle-password:focus-visible,
+  .login-card a:focus-visible {
+    outline: 3px solid rgba(198, 154, 80, .65);
+    outline-offset: 3px;
+  }
+  .login-divider {
+    height: 1px;
+    margin: 25px 0 20px;
+    background: #f0e8ec;
+  }
+  .login-card .auth-switch {
+    margin: 0;
+    color: #746870;
+    font-size: .9rem;
+    text-align: center;
+  }
+  .login-card .auth-switch a {
+    color: #762b4b;
+    font-weight: 750;
+    text-decoration: none;
+  }
+  .login-card .auth-switch a:hover { text-decoration: underline; }
+  .login-help {
+    margin: 19px 0 0;
+    color: #948891;
+    font-size: .78rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .login-help i { margin-right: 4px; color: #9c7788; }
+  @media (max-width: 767.98px) {
+    .login-section { min-height: 0; padding: 34px 0 48px; }
+    .login-layout { grid-template-columns: 1fr; gap: 25px; max-width: 500px; }
+    .login-story { padding: 0; }
+    .login-brand-logo { max-height: 46px; margin-bottom: 25px; }
+    .login-story h1 { max-width: 420px; font-size: clamp(2.15rem, 9vw, 3rem); }
+    .login-story-copy { margin-top: 12px; font-size: .96rem; }
+    .login-story-note { display: none; }
+    .login-card { padding: 27px 23px; border-radius: 20px; }
+    .login-card-heading { margin-bottom: 24px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .login-submit { transition: none; }
+    .login-submit:hover { transform: none; }
+  }
+</style>
+
+<section class="auth-section login-section">
+  <div class="container">
+    <div class="login-layout">
+      <div class="login-story">
+        <a href="{{ url_for('index') }}" aria-label="Irumanam home">
+          <img src="{{ url_for('static', filename='images/irumanam-logo.png') }}" alt="Irumanam" class="login-brand-logo">
+        </a>
+        <span class="eyebrow"><i class="bi bi-heart-fill" aria-hidden="true"></i> Your story continues</span>
+        <h1>Welcome back to <span>Irumanam.</span></h1>
+        <p class="login-story-copy">Sign in to reconnect with your matches and continue your journey toward a meaningful connection.</p>
+        <div class="login-story-note">
+          <span class="login-story-note-icon"><i class="bi bi-person-hearts" aria-hidden="true"></i></span>
+          <span>Pick up right where your search for a life partner left off.</span>
+        </div>
+      </div>
+
+      <div class="auth-card login-card">
+        <div class="login-card-heading">
+          <h2>Sign in</h2>
+          <p>Enter your account details to continue.</p>
+        </div>
+        <form method="post" id="loginForm">
+          <div class="mb-3">
+            <label class="form-label" for="identifier">Email address or mobile number</label>
+            <input class="form-control" id="identifier" name="identifier" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" required placeholder="Enter email or mobile number">
+          </div>
+          <div class="mb-4">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-group">
+              <input class="form-control password-field" id="password" name="password" type="password" autocomplete="current-password" required placeholder="Enter your password">
+              <button class="btn toggle-password" type="button" data-target="password" aria-label="Show password"><i class="bi bi-eye" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <button class="btn login-submit w-100" type="submit">Sign in <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+        </form>
+        <div class="login-divider" aria-hidden="true"></div>
+        <p class="auth-switch">New to Irumanam? <a href="{{ url_for('register') }}">Create a free profile</a></p>
+        <p class="login-help"><i class="bi bi-info-circle" aria-hidden="true"></i> Need help signing in? Contact the site administrator.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% include "_support_widget.html" %}
+{% endblock %}

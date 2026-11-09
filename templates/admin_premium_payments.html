@@ -1,0 +1,180 @@
+{% extends "admin_base.html" %}
+{% block title %}Premium Payments | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-credit-card-2-front"></i> Membership management</span>
+      <h1>Premium payment requests</h1>
+      <p>{{ payments|length }} request{{ '' if payments|length == 1 else 's' }} in this view. Verify proof and approve or reject each request.</p>
+    </div>
+    <a class="btn btn-outline-dark btn-sm" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-arrow-left me-1"></i> Admin dashboard</a>
+  </div>
+
+  <div class="card admin-surface p-3 mb-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <nav class="admin-status-filters d-flex flex-nowrap gap-2 overflow-auto" role="tablist" aria-label="Filter by status">
+        {% for st in ['PENDING','APPROVED','REJECTED','ALL'] %}
+          <a class="btn btn-sm flex-shrink-0 {% if status_filter==st %}btn-brand{% else %}btn-outline-secondary{% endif %}" href="{{ url_for('admin_premium_payments',status=st,q=query) }}"{% if status_filter==st %} aria-current="page"{% endif %}>{{ st.title() }}</a>
+        {% endfor %}
+      </nav>
+      <form method="get" id="paymentSearchForm" class="flex-grow-1 mb-0" style="min-width: min(100%, 320px);">
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        <label class="visually-hidden" for="paymentSearch">Search payment requests</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+          <input class="form-control" id="paymentSearch" name="q" type="search" value="{{ query }}" maxlength="120" placeholder="Member name, Matrimony ID, email, mobile, or transaction ID">
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card admin-surface dashboard-card p-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 adm-table adm-rt">
+        <thead class="table-light">
+          <tr>
+            <th>Member</th>
+            <th>Plan / Amount</th>
+            <th>Payment details</th>
+            <th>Status</th>
+            <th class="adm-review">Review</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in payments %}
+          <tr id="payment-{{ p['id'] }}">
+            <td class="adm-first">
+              <div class="fw-semibold">{{ p['full_name'] }}</div>
+              <small class="text-secondary">{{ p['matrimony_id'] }} · {{ p['mobile'] }}</small>
+              <div class="small text-break">{{ p['email'] }}</div>
+            </td>
+            <td data-label="Plan / Amount">
+              <div>
+                <b>{{ p['plan'] }}</b>
+                <div>₹{{ '{:,}'.format(p['amount']) }}</div>
+                <small class="text-secondary">{{ p['created_at'] }}</small>
+              </div>
+            </td>
+            <td data-label="Payment details" class="adm-block">
+              <div class="small">Transaction:
+                <code class="text-break">{{ p['transaction_id'] }}</code>
+                <button type="button" class="btn btn-sm btn-link p-0 ms-1 adm-copy" data-copy="{{ p['transaction_id'] }}" title="Copy transaction ID" aria-label="Copy transaction ID"><i class="bi bi-clipboard"></i></button>
+              </div>
+              <div class="small mb-2">Note: {{ p['notes'] }}</div>
+              <a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ url_for('admin_payment_screenshot',payment_id=p['id']) }}"><i class="bi bi-image me-1"></i> View screenshot</a>
+            </td>
+            <td data-label="Status">
+              <div>
+                <span class="badge {% if p['status']=='APPROVED' %}bg-success{% elif p['status']=='REJECTED' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ p['status'] }}</span>
+                {% if p['start_date'] %}<div class="small mt-1">{{ p['start_date'] }} – {{ p['expiry_date'] }}</div>{% endif %}
+                {% if p['admin_note'] %}<div class="small text-danger">{{ p['admin_note'] }}</div>{% endif %}
+              </div>
+            </td>
+            <td class="adm-review adm-block" data-label="Review">
+              {% if p['status']=='PENDING' %}
+              <form method="post" action="{{ url_for('admin_review_premium_payment',payment_id=p['id']) }}" class="adm-payment-review adm-approve-form" data-months="{{ plan_months[p['plan']] }}" onsubmit="return confirm('Verify and approve this payment?');">
+                <input type="hidden" name="action" value="approve">
+                <div class="row g-2 mb-2">
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label small mb-1" for="start_{{ p['id'] }}">Subscription start date</label>
+                    <input class="form-control form-control-sm adm-start" id="start_{{ p['id'] }}" type="date" name="start_date" value="{{ today if today is defined else '' }}" required>
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <label class="form-label small mb-1" for="expiry_{{ p['id'] }}">Expiry date</label>
+                    <input class="form-control form-control-sm adm-expiry" id="expiry_{{ p['id'] }}" type="date" name="expiry_date" required>
+                  </div>
+                </div>
+                <div class="form-text mb-2 adm-hint"></div>
+                <button class="btn btn-sm btn-success w-100"><i class="bi bi-patch-check me-1"></i> Verify &amp; approve</button>
+              </form>
+              <form method="post" action="{{ url_for('admin_review_premium_payment',payment_id=p['id']) }}">
+                <input type="hidden" name="action" value="reject">
+                <input class="form-control form-control-sm mb-2" name="reason" placeholder="Reason for rejection" maxlength="300" required aria-label="Reason for rejection">
+                <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-x-circle me-1"></i> Reject request</button>
+              </form>
+              {% else %}
+              <span class="small text-secondary">Reviewed {{ p['reviewed_at'] or '' }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="adm-empty text-center py-5 text-secondary">
+              <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+              No payment requests in this view.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var searchForm = document.getElementById('paymentSearchForm');
+    var searchInput = document.getElementById('paymentSearch');
+    var searchTimer;
+    if (searchForm && searchInput) {
+      searchInput.addEventListener('input', function () {
+        window.clearTimeout(searchTimer);
+        if (!searchInput.value.trim()) {
+          searchForm.requestSubmit();
+          return;
+        }
+        searchTimer = window.setTimeout(function () {
+          searchForm.requestSubmit();
+        }, 350);
+      });
+    }
+
+    // Copy transaction ID
+    document.querySelectorAll('.adm-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var text = btn.getAttribute('data-copy') || '';
+        if (!(navigator.clipboard && navigator.clipboard.writeText)) return;
+        navigator.clipboard.writeText(text).then(function () {
+          var i = btn.querySelector('i');
+          i.className = 'bi bi-clipboard-check text-success';
+          setTimeout(function () { i.className = 'bi bi-clipboard'; }, 1500);
+        });
+      });
+    });
+
+    // Suggest a calendar-month expiry based on the selected plan; admins can edit it.
+    function fmt(d) {
+      var m = ('0' + (d.getMonth() + 1)).slice(-2), day = ('0' + d.getDate()).slice(-2);
+      return d.getFullYear() + '-' + m + '-' + day;
+    }
+    function addMonths(value, months) {
+      var d = new Date(value + 'T00:00:00');
+      if (isNaN(d)) return '';
+      var day = d.getDate();
+      d.setDate(1);
+      d.setMonth(d.getMonth() + months);
+      var lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      d.setDate(Math.min(day, lastDay));
+      return fmt(d);
+    }
+    document.querySelectorAll('.adm-approve-form').forEach(function (form) {
+      var months = Number(form.getAttribute('data-months'));
+      var start = form.querySelector('.adm-start');
+      var expiry = form.querySelector('.adm-expiry');
+      var hint = form.querySelector('.adm-hint');
+      if (!months) { hint.remove(); return; }
+      hint.textContent = 'Suggested expiry: start date + ' + months + ' months. You can change it.';
+      var touched = false;
+      expiry.addEventListener('input', function () { touched = true; });
+      function suggest() {
+        expiry.min = start.value;
+        if (touched || !start.value) return;
+        expiry.value = addMonths(start.value, months);
+      }
+      start.addEventListener('change', suggest);
+      suggest();
+    });
+  })();
+</script>
+{% endblock %}

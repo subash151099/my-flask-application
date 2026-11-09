@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found | Irumanam{% endblock %}
+{% block content %}
+<section class="container py-5 text-center" aria-labelledby="not-found-title">
+  <div class="mx-auto" style="max-width: 38rem">
+    <p class="eyebrow">404 · Page not found</p>
+    <h1 id="not-found-title" class="section-title">We couldn’t find that page</h1>
+    <p class="text-secondary">The page may have moved, or the address may be incorrect.</p>
+    <a class="btn-or mt-3" href="{{ url_for('index') }}">Return to Irumanam</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "admin_base.html" %}
+{% block title %}Members | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-people"></i> Member management</span>
+      <h1>{% if inactive %}Inactive accounts{% else %}Approved members{% endif %}</h1>
+      <p>{% if inactive %}Restore an account to make it available again.{% else %}Manage approved member profiles, account status, and Premium plans.{% endif %}</p>
+    </div>
+    <a class="btn btn-outline-dark btn-sm" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-arrow-left me-1"></i> Admin dashboard</a>
+  </div>
+
+  <div class="d-flex gap-2 mb-3">
+    <a class="btn btn-sm {{ 'btn-brand' if not inactive else 'btn-outline-secondary' }}" href="{{ url_for('admin_users', q=query) }}">Approved members</a>
+    <a class="btn btn-sm {{ 'btn-brand' if inactive else 'btn-outline-secondary' }}" href="{{ url_for('admin_users', scope='inactive', q=query) }}">Inactive accounts</a>
+  </div>
+
+  <div class="card admin-surface p-3 mb-3">
+    <form method="get" id="memberSearchForm" class="mb-0">
+      {% if inactive %}<input type="hidden" name="scope" value="inactive">{% endif %}
+      <label class="visually-hidden" for="memberSearch">Search members</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+        <input class="form-control" id="memberSearch" name="q" type="search" value="{{ query }}" maxlength="120" placeholder="Name, Matrimony ID, email, mobile, or location">
+      </div>
+    </form>
+  </div>
+
+  <div class="card admin-surface dashboard-card p-0 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 adm-table adm-rt">
+        <thead class="table-light">
+          <tr><th>Member</th><th>Contact</th><th>Location</th><th>Plan</th><th class="text-end">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for member in users %}
+          <tr>
+            <td class="adm-first">
+              <div class="fw-semibold">{{ member['full_name'] }}</div>
+              <small class="text-secondary">{{ member['matrimony_id'] }} · {{ member['is_approved'] }}</small>
+            </td>
+            <td data-label="Contact"><div class="small text-break">{{ member['email'] }}</div><small class="text-secondary">{{ member['mobile'] }}</small></td>
+            <td data-label="Location">{{ member['city'] or '—' }}</td>
+            <td data-label="Plan">
+              <span class="badge {% if member['plan']=='FREE' %}bg-secondary{% else %}bg-info text-dark{% endif %}">{{ member['plan'] or 'FREE' }}</span>
+              {% if member['plan_until'] %}<small class="d-block text-secondary">Until {{ member['plan_until'] }}</small>{% endif %}
+            </td>
+            <td class="text-end" data-label="Actions">
+              <div class="d-flex justify-content-end gap-2 flex-wrap">
+                {% if inactive %}
+                <form method="post" action="{{ url_for('admin_user_action', user_id=member['id']) }}" onsubmit="return confirm('Restore this member account?');">
+                  <input type="hidden" name="action" value="restore">
+                  <button class="btn btn-sm btn-success"><i class="bi bi-arrow-counterclockwise me-1"></i> Restore</button>
+                </form>
+                {% else %}
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_user_edit', user_id=member['id']) }}"><i class="bi bi-pencil-square me-1"></i> Edit</a>
+                <form method="post" action="{{ url_for('admin_user_action', user_id=member['id']) }}" onsubmit="return confirm('Deactivate this member account? It will be hidden from members and can be restored later.');">
+                  <input type="hidden" name="action" value="deactivate">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-person-x me-1"></i> Delete</button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center text-secondary py-5">{% if inactive %}No inactive accounts.{% else %}No approved members found.{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var form = document.getElementById('memberSearchForm');
+    var input = document.getElementById('memberSearch');
+    var timer;
+    if (!form || !input) return;
+    input.addEventListener('input', function () {
+      window.clearTimeout(timer);
+      if (!input.value.trim()) {
+        form.requestSubmit();
+        return;
+      }
+      timer = window.setTimeout(function () {
+        form.requestSubmit();
+      }, 350);
+    });
+  })();
+</script>
+{% endblock %}

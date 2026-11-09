@@ -1,0 +1,118 @@
+{% extends "admin_base.html" %}
+{% block title %}Login advertisements | Irumanam Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-megaphone"></i> Member experience</span>
+      <h1>Login advertisements</h1>
+      <p>Schedule login promotions, choose audiences, and review delivery and close metrics.</p>
+    </div>
+    <a class="btn btn-brand" href="{{ url_for('admin_advertisement_form') }}"><i class="bi bi-plus-lg me-1"></i> Create advertisement</a>
+  </div>
+
+  <div class="admin-advertisement-note">
+    <i class="bi bi-shield-check"></i>
+    <span>Images are kept in protected storage. Archiving disables an advertisement but preserves its image, settings, delivery metrics, and history.</span>
+  </div>
+
+  <section class="admin-surface admin-advertisement-list">
+    <div class="admin-section-heading p-3 pb-0">
+      <span class="admin-section-icon"><i class="bi bi-megaphone"></i></span>
+      <div><h2>Advertisements</h2><p>{{ advertisements|length }} total, including archived records</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 adm-table ad-admin-table">
+        <thead><tr><th>Advertisement</th><th>Schedule</th><th>Audience / frequency</th><th>Delivery</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          {% for ad in advertisements %}
+          <tr>
+            <td data-label="Advertisement">
+              <div class="d-flex align-items-center gap-2">
+                <img class="ad-history-image" src="{{ url_for('admin_advertisement_image', ad_id=ad['id']) }}" alt="">
+                <div class="min-w-0">
+                  <strong class="d-block text-break">{{ ad['title'] }}</strong>
+                  <small class="text-secondary">Created by {{ ad['created_by_name'] }} · {{ ad['created_at'][:10] }}</small>
+                  <small class="d-block text-secondary">Published {{ ad['published_at'][:10] if ad['published_at'] else 'Not yet published' }}</small>
+                </div>
+              </div>
+            </td>
+            <td data-label="Schedule">
+              <span>{{ ad['start_date'] }} – {{ ad['end_date'] }}</span>
+              <small class="d-block text-secondary">{{ ad['display_days'] }} day{{ '' if ad['display_days']==1 else 's' }} · expires {{ ad['expiry_date'] }}</small>
+            </td>
+            <td data-label="Audience / frequency">
+              <span>{{ audiences[ad['target_audience']] }}</span>
+              {% if ad['target_audience']=='SELECTED' %}<small class="d-block text-secondary">{{ ad['selected_users']|length }} selected member{{ '' if ad['selected_users']|length==1 else 's' }}</small>{% endif %}
+              <small class="d-block text-secondary">{{ frequencies[ad['display_frequency']] }}</small>
+            </td>
+            <td data-label="Delivery">
+              <strong>{{ ad['impressions'] }}</strong> impressions
+              <small class="d-block text-secondary">{{ ad['unique_users'] }} unique · {{ ad['closes'] }} closed</small>
+            </td>
+            <td data-label="Status">
+              {% set status = 'Archived' if ad['is_deleted'] else ad['status'] %}
+              <span class="badge ad-status ad-status-{{ status|lower }}">{{ status }}</span>
+            </td>
+            <td data-label="Actions" class="ad-admin-actions">
+              {% if not ad['is_deleted'] %}
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_advertisement_form', ad_id=ad['id']) }}"><i class="bi bi-pencil-square"></i> Edit</a>
+              {% if ad['is_enabled'] %}
+              <form method="post" action="{{ url_for('admin_advertisement_action', ad_id=ad['id']) }}">
+                <input type="hidden" name="action" value="disable">
+                <button class="btn btn-sm btn-outline-warning" type="submit"><i class="bi bi-pause-circle"></i> Disable</button>
+              </form>
+              {% else %}
+              <form method="post" action="{{ url_for('admin_advertisement_action', ad_id=ad['id']) }}">
+                <input type="hidden" name="action" value="enable">
+                <button class="btn btn-sm btn-outline-success" type="submit" {% if ad['status']=='Expired' %}disabled title="Edit the schedule before enabling"{% endif %}><i class="bi bi-play-circle"></i> Enable</button>
+              </form>
+              {% endif %}
+              <form method="post" action="{{ url_for('admin_advertisement_action', ad_id=ad['id']) }}" onsubmit="return confirm('Archive this advertisement? It will stop displaying, but its history and image will be retained.');">
+                <input type="hidden" name="action" value="delete">
+                <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-archive"></i> Archive</button>
+              </form>
+              {% else %}
+              <span class="small text-secondary">History retained</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-secondary py-5"><i class="bi bi-megaphone d-block fs-2 mb-2"></i>No advertisements yet. Create one to schedule a member login popup.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="admin-surface admin-advertisement-list mt-4">
+    <div class="admin-section-heading p-3 pb-0">
+      <span class="admin-section-icon"><i class="bi bi-clock-history"></i></span>
+      <div><h2>Advertisement history</h2><p>Every creation, edit, publish, enable, disable, and archive action is retained.</p></div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 adm-table ad-admin-table">
+        <thead><tr><th>Snapshot</th><th>Advertisement</th><th>Target / frequency</th><th>Schedule</th><th>Changed by</th><th>Recorded</th></tr></thead>
+        <tbody>
+          {% for item in history %}
+          <tr>
+            <td data-label="Snapshot"><a href="{{ url_for('admin_advertisement_history_image', history_id=item['id']) }}" target="_blank" rel="noopener"><img class="ad-history-image" src="{{ url_for('admin_advertisement_history_image', history_id=item['id']) }}" alt="View historical advertisement image"></a></td>
+            <td data-label="Advertisement"><strong>{{ item['title'] }}</strong><small class="d-block text-secondary">{{ item['action']|title }} · Created {{ item['created_at'][:10] }}</small></td>
+            <td data-label="Target / frequency">
+              {{ audiences.get(item['target_audience'], item['target_audience']) }}
+              {% if item['target_audience']=='SELECTED' %}<small class="d-block text-secondary">{{ item['selected_user_count'] }} selected members</small>{% endif %}
+              <small class="d-block text-secondary">{{ frequencies.get(item['display_frequency'], item['display_frequency']) }}</small>
+            </td>
+            <td data-label="Schedule">{{ item['start_date'] }} – {{ item['end_date'] }}<small class="d-block text-secondary">{{ item['display_days'] }} days · Published {{ item['published_at'][:10] if item['published_at'] else 'Pending' }}</small></td>
+            <td data-label="Changed by">{{ item['changed_by_name'] }}</td>
+            <td data-label="Recorded">{{ item['changed_at'] }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-secondary py-4">Advertisement changes will appear here.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% macro avatar(p) %}{% if p['photo_path'] %}<img class="ph" src="{{ url_for('static', filename=p['photo_path']) }}" alt="{{ p['full_name'] }}" loading="lazy">{% else %}<div class="ph ph-init profile-gender-placeholder" role="img" aria-label="{{ 'Girl' if p['gender']=='Bride' else 'Boy' }} profile placeholder"><i class="bi {{ 'bi-gender-female' if p['gender']=='Bride' else 'bi-gender-male' }}" aria-hidden="true"></i></div>{% endif %}{% endmacro %}
+{% macro card(p, mode='') %}{% set h = p['height_cm'] %}
+{% set full_details = premium and p['premium_details_visible'] %}
+<article class="mcard">
+<div class="mcard-media">
+<a class="mcard-photo" href="{{ url_for('view_profile', profile_id=p['id']) }}">{{ avatar(p) }}<span class="mcard-shade"></span>
+<div class="mcard-cap"><h3>{{ p['full_name'] }}<span>, {{ calculate_age(p['date_of_birth']) }}</span></h3></div></a>
+{% if full_details and p['created_at'] and p['created_at'][:10] >= new_cut() %}<span class="tag-new on-photo">New</span>{% endif %}
+<form class="mcard-save" method="post" action="{{ url_for('toggle_shortlist', profile_id=p['id']) }}"><button class="{{ 'on' if p['shortlisted'] }}" title="{{ 'Remove from shortlist' if p['shortlisted'] else 'Shortlist' }}"><i class="bi {{ 'bi-bookmark-fill' if p['shortlisted'] else 'bi-bookmark' }}"></i></button></form>
+{% if full_details %}<div class="mcard-contact"><a class="ico" title="View profile contact options" href="{{ url_for('view_profile', profile_id=p['id']) }}"><i class="bi bi-telephone"></i></a><a class="ico wa" title="View profile contact options" href="{{ url_for('view_profile', profile_id=p['id']) }}"><i class="bi bi-whatsapp"></i></a></div>{% endif %}
+</div>
+<div class="mcard-body">
+{% if full_details %}
+{% set rows = [('mortarboard', p['education']), ('briefcase', p['occupation']), ('geo-alt', [p['city'], p['state']]|select|join(', ')), ('rulers', (((h/30.48)|int) ~ "'" ~ (((h/2.54)|round|int) % 12) ~ '"') if h else '')] %}
+{% else %}
+{% set rows = [('mortarboard', p['education']), ('geo-alt', [p['city'], p['state']]|select|join(', '))] %}
+{% endif %}
+<ul class="mdata">{% for ic, v in rows if v %}<li title="{{ v }}"><i class="bi bi-{{ ic }}"></i><span>{{ v }}</span></li>{% endfor %}</ul>
+{% if full_details and p['caste'] %}<div class="mtags"><span>{{ p['caste'] }}</span></div>{% endif %}
+{% if mode == 'recv' %}<p class="sent-line"><b>{{ 'She' if p['gender']=='Bride' else 'He' }} sent you an interest</b> - {{ p['sent_at'][:10] }}</p>{% endif %}
+<div class="mbtns">
+{% if mode == 'recv' %}{% if p['interest_status'] == 'ACCEPTED' %}<span class="pill ok">Accepted</span><a class="btn-or" href="{{ url_for('chat', other_id=p['id']) }}"><i class="bi bi-chat-heart"></i> Message</a>
+{% elif p['interest_status'] == 'DECLINED' %}<span class="pill">Declined</span>
+{% else %}<form method="post" action="{{ url_for('respond_interest', sender_id=p['id']) }}"><input type="hidden" name="action" value="decline"><button class="pill big"><i class="bi bi-hand-thumbs-down"></i> Decline</button></form><form method="post" action="{{ url_for('respond_interest', sender_id=p['id']) }}"><input type="hidden" name="action" value="accept"><button class="btn-or"><i class="bi bi-hand-thumbs-up"></i> Accept</button></form>{% endif %}
+{% elif mode == 'sent' %}<span class="pill {{ 'ok' if p['interest_status']=='ACCEPTED' }}">Interest {{ p['interest_status']|title }}</span>{% if p['interest_status']=='ACCEPTED' %}<a class="btn-or" href="{{ url_for('chat', other_id=p['id']) }}">Message</a>{% endif %}
+{% elif p['interested'] %}<span class="pill ok"><i class="bi bi-check2"></i> Interest Sent</span>
+{% else %}<form method="post" action="{{ url_for('send_interest', profile_id=p['id']) }}"><button class="btn-or"><i class="bi bi-heart"></i> Send Interest</button></form>{% endif %}
+</div></div></article>{% endmacro %}

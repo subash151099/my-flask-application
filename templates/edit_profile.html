@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar with context %}
+{% block title %}Edit Profile | Irumanam{% endblock %}
+{% macro inp(name, label, val, extra='') %}<div class="fg"><label>{{ label }}</label><input class="form-control" name="{{ name }}" value="{{ val or '' }}" {{ extra|safe }}></div>{% endmacro %}
+{% macro sel(name, label, opts, cur, blank='') %}<div class="fg"><label>{{ label }}</label><select class="form-select" name="{{ name }}">{% if blank %}<option value="">{{ blank }}</option>{% endif %}{% for x in opts %}<option {{ 'selected' if cur==x }}>{{ x }}</option>{% endfor %}</select></div>{% endmacro %}
+
+{% block content %}
+<style>
+  /* Styled File Upload Button */
+  .custom-file-upload {
+    display: inline-block;
+    padding: 8px 18px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #e91e63, #ff4081);
+    color: #fff;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(233, 30, 99, 0.2);
+    transition: all 0.3s ease;
+  }
+  .custom-file-upload:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(233, 30, 99, 0.3);
+  }
+  .custom-file-upload i {
+    margin-right: 6px;
+  }
+
+  /* Preview Container & Cropper Box */
+  .photo-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .photo-prev {
+    width: 120px;
+    height: 150px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #2563eb;
+  }
+  .photo-prev img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  #cropArea {
+    display: none;
+    margin-top: 15px;
+    max-width: 400px;
+  }
+  .crop-container {
+    width: 100%;
+    max-height: 420px;
+    overflow: hidden;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+  .crop-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+</style>
+
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
+
+<div class="wrap">
+  <div class="edit-grid">
+    <aside class="enav">
+      <div class="ring sm" style="--v:{{ completeness(user) }}"><b>{{ completeness(user) }}%</b></div>
+      <p class="text-center small text-secondary">Profile strength</p>
+      {% for a,l,i in [('photo','Photo','camera'),('basic','Basic details','person'),('horo','Religion &amp; horoscope','stars'),('career','Education &amp; career','briefcase'),('loc','Location','geo-alt'),('about','About me','chat-quote')] %}
+        <a href="#{{ a }}"><i class="bi bi-{{ i }}"></i> {{ l|safe }}</a>
+      {% endfor %}
+      <a class="enav-pdf" href="{{ url_for('biodata_pdf') }}"><i class="bi bi-file-earmark-pdf"></i> Download Biodata (PDF)</a>
+    </aside>
+
+    <form method="post" enctype="multipart/form-data" class="eform">
+      <section class="card2" id="photo">
+        <h2><i class="bi bi-camera"></i> Profile photo</h2>
+        <div class="photo-row">
+          <div class="photo-prev" id="photoPrev">{{ avatar(user) }}</div>
+          <div>
+            <label for="photoInput" class="custom-file-upload">
+              <i class="bi bi-cloud-arrow-up-fill"></i> Choose Photo
+            </label>
+            <input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" style="display: none;">
+            <input type="hidden" name="cropped_photo" id="croppedPhoto">
+            <div class="form-text mt-2">Use a clear, portrait photo (JPG, PNG or WebP up to 3 MB). It is shown large on your profile card.</div>
+          </div>
+        </div>
+
+        <!-- Crop / Adjust Box -->
+        <div id="cropArea">
+          <p class="small text-muted mb-2">Adjust photo position & zoom:</p>
+          <div class="crop-container">
+            <img id="cropImage" src="" alt="Photo Preview">
+          </div>
+          <div class="crop-controls">
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnZoomIn"><i class="bi bi-zoom-in"></i> Zoom In</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnZoomOut"><i class="bi bi-zoom-out"></i> Zoom Out</button>
+            <button type="button" class="btn btn-sm btn-success" id="btnApplyCrop"><i class="bi bi-check-lg"></i> Apply Photo</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card2" id="basic">
+        <h2><i class="bi bi-person"></i> Basic details</h2>
+        <div class="g2">
+          {{ sel('profile_created_by','Profile created by',['Self','Parent','Sibling','Relative','Friend'],user['profile_created_by']) }}
+          {{ sel('marital_status','Marital status',['Never Married','Divorced','Widowed','Awaiting Divorce'],user['marital_status']) }}
+          {{ inp('height_cm','Height (cm)',user['height_cm'],'type="number" min="120" max="230"') }}
+          {{ sel('diet','Diet',['Vegetarian','Non-Vegetarian','Eggetarian','Vegan'],user['diet'],'Not specified') }}
+        </div>
+      </section>
+
+      <section class="card2" id="horo">
+        <h2><i class="bi bi-stars"></i> Religion &amp; horoscope</h2>
+        <div class="g2">
+          {{ sel('religion','Religion',dropdowns.religion,user['religion'],'Select religion') }}
+          {{ sel('caste','Caste / community',dropdowns.caste,user['caste'],'Select community') }}
+          {{ sel('mother_tongue','Mother tongue',dropdowns.mother_tongue,user['mother_tongue'],'Select mother tongue') }}
+          {{ sel('star','Star (Nakshatra)',dropdowns.star,user['star'],'Select star') }}
+          {{ sel('raasi','Raasi',dropdowns.raasi,user['raasi'],'Select raasi') }}
+        </div>
+      </section>
+
+      <section class="card2" id="career">
+        <h2><i class="bi bi-briefcase"></i> Education &amp; career</h2>
+        <div class="g2">
+          {{ inp('education','Education',user['education'],'maxlength="120"') }}
+          {{ inp('occupation','Occupation',user['occupation'],'maxlength="120"') }}
+        </div>
+      </section>
+
+      <section class="card2" id="loc">
+        <h2><i class="bi bi-geo-alt"></i> Location</h2>
+        <div class="g3">
+          {{ inp('country','Country',user['country'] or 'India') }}
+          {{ inp('state','State',user['state']) }}
+          {{ inp('city','City',user['city']) }}
+        </div>
+      </section>
+
+      <section class="card2" id="about">
+        <h2><i class="bi bi-chat-quote"></i> About me</h2>
+        <textarea class="form-control" name="about_me" rows="5" maxlength="1000" id="aboutMe" placeholder="Write a short, warm introduction about yourself and your family...">{{ user['about_me'] or '' }}</textarea>
+        <div class="form-text text-end"><span id="aboutCount">0</span>/1000</div>
+      </section>
+
+      <div class="savebar">
+        <a class="pill big" href="{{ url_for('view_profile', profile_id=user['id']) }}">Cancel</a>
+        <button class="btn-or" type="submit"><i class="bi bi-check2-circle"></i> Save changes</button>
+      </div>
+    </form>
+  </div>
+  <section class="card2 mt-4" id="album">
+    <h2><i class="bi bi-images"></i> Premium photo album</h2>
+    <p class="text-secondary">Add up to 12 private album photos. Each photo must be JPG, PNG, or WebP and no larger than 2.5 MB. Only you and eligible active Premium members can view them.</p>
+    <form method="post" action="{{ url_for('profile_album_upload') }}" enctype="multipart/form-data" class="d-flex flex-wrap align-items-center gap-3 mb-4">
+      <label class="form-label mb-0" for="albumPhotos">Choose photos</label>
+      <input class="form-control" style="max-width:420px" id="albumPhotos" name="album_photos" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+      <button class="btn-or" type="submit"><i class="bi bi-cloud-arrow-up"></i> Upload photos</button>
+    </form>
+    {% if album_photos %}
+    <div class="row g-3">
+      {% for photo in album_photos %}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="border rounded-3 p-2">
+          <img
+            src="{{ url_for('profile_album_photo', profile_id=user['id'], photo_id=photo['id']) }}"
+            alt="Your album photo {{ loop.index }}"
+            class="w-100 rounded-2 mb-2"
+            loading="lazy"
+            style="aspect-ratio:4/5;object-fit:cover">
+          <form method="post" action="{{ url_for('profile_album_delete', photo_id=photo['id']) }}" onsubmit="return confirm('Remove this photo from your album?')">
+            <button type="submit" class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash"></i> Remove</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="mb-0">No photos in your album yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+<!-- Cropper.js JS Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+  let cropper;
+  const photoInput = document.getElementById('photoInput');
+  const cropImage = document.getElementById('cropImage');
+  const cropArea = document.getElementById('cropArea');
+  const photoPrev = document.getElementById('photoPrev');
+  const croppedPhotoInput = document.getElementById('croppedPhoto');
+
+  photoInput.addEventListener('change', function (e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        cropImage.src = event.target.result;
+        cropArea.style.display = 'block';
+
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 4 / 5,
+          viewMode: 1,
+          autoCropArea: 0.8,
+          background: false,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('btnZoomIn').addEventListener('click', function () {
+    if (cropper) cropper.zoom(0.1);
+  });
+
+  document.getElementById('btnZoomOut').addEventListener('click', function () {
+    if (cropper) cropper.zoom(-0.1);
+  });
+
+  document.getElementById('btnApplyCrop').addEventListener('click', function () {
+    if (cropper) {
+      const canvas = cropper.getCroppedCanvas({
+        width: 800,
+        height: 1000,
+        imageSmoothingQuality: 'high',
+      });
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      photoPrev.innerHTML = `<img src="${croppedDataUrl}" alt="Profile Preview">`;
+      croppedPhotoInput.value = croppedDataUrl;
+      cropArea.style.display = 'none';
+    }
+  });
+</script>
+{% endblock %}

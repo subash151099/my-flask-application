@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar with context %}
+{% block title %}{{ p['full_name'] }} | Irumanam{% endblock %}
+{% macro info(label, icon, val) %}
+  <div class="pf2-fact">
+    <i class="bi bi-{{ icon }}"></i>
+    <div><span>{{ label }}</span><b>{{ val or 'Not added' }}</b></div>
+  </div>
+{% endmacro %}
+
+{% block content %}
+{% set me = p['id'] == session['user_id'] %}
+{% set h = p['height_cm'] %}
+
+<div class="pf2">
+  <a class="pf2-back" href="javascript:history.back()"><i class="bi bi-arrow-left"></i> Back</a>
+
+  <!-- Hero: big photo + key info -->
+  <section class="pf2-hero">
+    <div class="pf2-photo">
+      {% if p['photo_path'] %}
+        <button type="button" class="pf2-zoom" data-bs-toggle="modal" data-bs-target="#photoModal" aria-label="View full photo">{{ avatar(p) }}<span><i class="bi bi-arrows-fullscreen"></i></span></button>
+      {% else %}
+        {{ avatar(p) }}
+      {% endif %}
+      {% if me %}<a class="pf2-change" href="{{ url_for('edit_profile') }}#photo"><i class="bi bi-camera-fill"></i> {{ 'Change photo' if p['photo_path'] else 'Add photo' }}</a>{% endif %}
+    </div>
+
+    <div class="pf2-main">
+      <div>
+        <h1>{{ p['full_name'] }}</h1>
+      </div>
+
+      <div class="pf2-tags">
+        <span><i class="bi bi-calendar-event"></i> {{ age }} yrs</span>
+        {% if h %}<span><i class="bi bi-rulers"></i> {{ h }} cm</span>{% endif %}
+        {% if p['city'] %}<span><i class="bi bi-geo-alt"></i> {{ p['city'] }}{% if p['state'] %}, {{ p['state'] }}{% endif %}</span>{% endif %}
+      </div>
+
+      <div class="pf2-actions">
+        {% if me %}
+          <a class="btn-or" href="{{ url_for('edit_profile') }}"><i class="bi bi-pencil-square"></i> Edit Profile</a>
+          <a class="pill big" href="{{ url_for('biodata_pdf') }}"><i class="bi bi-file-earmark-pdf"></i> Download Biodata</a>
+        {% else %}
+          {% if sent_status == 'ACCEPTED' %}
+            <span class="pill ok big">Interest Accepted</span>
+          {% elif sent_status == 'DECLINED' %}
+            <span class="pill big">Interest Declined</span>
+          {% elif p['interested'] %}
+            <span class="pill ok big"><i class="bi bi-check2"></i> Interest Sent</span>
+          {% else %}
+            <form method="post" action="{{ url_for('send_interest', profile_id=p['id']) }}">
+              <button class="btn-or"><i class="bi bi-heart"></i> Send Interest</button>
+            </form>
+          {% endif %}
+
+          <a class="pill big {% if not can_chat %}disabled{% endif %}" href="{{ url_for('chat', other_id=p['id']) }}"><i class="bi bi-chat-heart"></i> Message</a>
+
+          <form method="post" action="{{ url_for('toggle_shortlist', profile_id=p['id']) }}">
+            <button class="pill big" title="Shortlist"><i class="bi {{ 'bi-bookmark-fill' if p['shortlisted'] else 'bi-bookmark' }}"></i></button>
+          </form>
+
+          <form method="post" action="{{ url_for('block', profile_id=p['id']) }}" onsubmit="return confirm('Block this member? Their profile and conversation will become unavailable to you.')">
+            <button class="pill big" title="Block member"><i class="bi bi-slash-circle"></i></button>
+          </form>
+        {% endif %}
+        <button class="pill big" type="button" id="shareProfileButton" data-share-url="{{ url_for('view_profile', profile_id=p['id'], _external=True) }}">
+          <i class="bi bi-share"></i> Share profile
+        </button>
+      </div>
+      <p class="small text-secondary mt-2 mb-0" id="shareProfileStatus" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="pf2-card profile-album-card" aria-labelledby="profileAlbumHeading">
+    <h2 id="profileAlbumHeading"><i class="bi bi-images"></i> Photo album</h2>
+    {% if can_view_album %}
+      {% if album_photos %}
+      <div class="row g-3">
+        {% for photo in album_photos %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <img
+            src="{{ url_for('profile_album_photo', profile_id=p['id'], photo_id=photo['id']) }}"
+            alt="{{ p['full_name'] }} photo {{ loop.index }}"
+            class="w-100 rounded-3"
+            loading="lazy"
+            style="aspect-ratio:4/5;object-fit:cover">
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-secondary mb-0">{{ 'No album photos have been added yet.' if me else 'No album photos are available.' }}</p>
+      {% endif %}
+      {% if me %}<a class="btn-or sm mt-3" href="{{ url_for('edit_profile') }}#album"><i class="bi bi-plus-lg"></i> Manage photos</a>{% endif %}
+    {% else %}
+      <button type="button" class="btn btn-link p-0 text-start text-decoration-none" data-bs-toggle="modal" data-bs-target="#albumSubscribeModal">
+        <span class="d-flex align-items-center gap-3">
+          <span class="rounded-3 d-inline-flex align-items-center justify-content-center bg-light text-secondary" style="width:72px;height:88px"><i class="bi bi-lock-fill fs-3"></i></span>
+          <span><b class="d-block">Premium photo album</b><span class="text-secondary">Subscribe to view this member's complete album.</span></span>
+        </span>
+      </button>
+    {% endif %}
+  </section>
+
+  <!-- Details -->
+  <div class="pf2-grid">
+    <div>
+      <section class="pf2-card">
+        <h2><i class="bi bi-card-checklist"></i> Profile Details</h2>
+        <div class="pf2-facts">
+          {{ info('Country', 'globe', p['country']) }}
+          {{ info('State', 'geo-alt', p['state']) }}
+          {{ info('City', 'pin-map', p['city']) }}
+          {{ info('Date of Birth', 'calendar-event', p['date_of_birth']) }}
+          {{ info('Height', 'rulers', (h|string ~ ' cm') if h else '') }}
+          {{ info('Qualification', 'mortarboard', p['education']) }}
+          {{ info('Occupation / Work', 'briefcase', p['occupation']) }}
+          {{ info('Food Preference', 'egg-fried', p['diet']) }}
+          {{ info('Community', 'people', p['caste']) }}
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      {% if me %}
+        <div class="pf2-card text-center">
+          <h2 class="justify-content-center">Profile Strength</h2>
+          <div class="ring sm mx-auto my-2" style="--v:{{ percent }}"><b>{{ percent }}%</b></div>
+
+          {% set miss = [] %}
+          {% for k,l in [('photo_path','Profile photo'),('caste','Community'),('height_cm','Height'),('diet','Food preference'),('education','Qualification'),('occupation','Occupation'),('country','Country'),('state','State'),('city','City')] if not p[k] %}
+            {% if miss.append(l) %}{% endif %}
+          {% endfor %}
+
+          {% if miss %}
+            <p class="small text-secondary mt-3 mb-2">Complete these fields to get better visibility:</p>
+            <div class="tags justify-content-center">
+              {% for l in miss %}<a class="tag add" href="{{ url_for('edit_profile') }}">+ {{ l }}</a>{% endfor %}
+            </div>
+          {% else %}
+            <p class="text-success mt-3 small">Your profile is 100% complete! 🎉</p>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="pf2-card">
+          <h2><i class="bi bi-shield-check"></i> Safety Tips</h2>
+          <ul class="tips mb-0">
+            <li>Never share OTP or banking passwords.</li>
+            <li>Meet in public places with family members.</li>
+            <li>Verify background information before proceeding.</li>
+          </ul>
+        </div>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+
+{% if not can_view_album %}
+<div class="modal fade" id="albumSubscribeModal" tabindex="-1" aria-labelledby="albumSubscribeTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header border-0">
+        <h2 class="modal-title fs-5" id="albumSubscribeTitle"><i class="bi bi-stars text-warning"></i> Unlock the photo album</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">Subscribe to an active Premium plan to view complete photo albums. Access unlocks after your payment has been verified and approved.</div>
+      <div class="modal-footer border-0 pt-0">
+        <a class="btn-or" href="{{ url_for('premium_page') }}">Subscribe Now</a>
+        <button type="button" class="pill big" data-bs-dismiss="modal">Not now</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+  (() => {
+    const shareButton = document.getElementById("shareProfileButton");
+    const shareStatus = document.getElementById("shareProfileStatus");
+    if (!shareButton || !shareStatus) return;
+
+    shareButton.addEventListener("click", async () => {
+      const shareUrl = shareButton.dataset.shareUrl;
+      shareStatus.textContent = "";
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: document.title, url: shareUrl });
+          shareStatus.textContent = "Profile shared.";
+          return;
+        } catch (error) {
+          if (error.name === "AbortError") return;
+        }
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          shareStatus.textContent = "Profile link copied.";
+          return;
+        } catch (error) {
+          shareStatus.textContent = "Clipboard access was denied. Copy the profile link below.";
+        }
+      } else {
+        shareStatus.textContent = "Copy the profile link below.";
+      }
+
+      window.prompt("Copy this profile link:", shareUrl);
+    });
+  })();
+</script>
+
+{% if p['photo_path'] %}
+<!-- Full-size photo viewer -->
+<div class="modal fade" id="photoModal" tabindex="-1" aria-label="Profile photo" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-transparent border-0 align-items-center">
+      <button type="button" class="btn-close btn-close-white ms-auto mb-2" data-bs-dismiss="modal" aria-label="Close"></button>
+      <img src="{{ url_for('static', filename=p['photo_path']) }}" alt="{{ p['full_name'] }}" class="img-fluid rounded-4" style="max-height:85vh;object-fit:contain">
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,2 @@
+{% extends "base.html" %}
+{% block title %}Who viewed me{% endblock %}{% block content %}<section class="dashboard-section"><div class="container"><div class="empty-state"><i class="bi bi-eye"></i><h3>{{ count }} member(s) viewed your profile</h3><p>Upgrade to Premium to see who they are.</p><a class="btn btn-brand" href="{{ url_for('premium_page') }}">View plans</a></div></div></section>{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "admin_base.html" %}
+{% block title %}Pending Premium Subscriptions | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-credit-card-2-front"></i> Membership management</span>
+      <h1>Pending premium subscriptions</h1>
+      <p>{{ pending|length }} request{{ '' if pending|length == 1 else 's' }} waiting for review.</p>
+    </div>
+    <a class="btn btn-outline-dark btn-sm" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-arrow-left me-1"></i> Admin dashboard</a>
+  </div>
+
+  <div class="card admin-surface admin-table-wrap">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 adm-table adm-rt">
+        <thead class="table-light">
+          <tr>
+            <th>User</th>
+            <th>Plan</th>
+            <th>Amount</th>
+            <th>Transaction ID</th>
+            <th>Generated Note</th>
+            <th>Proof</th>
+            <th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in pending %}
+          <tr>
+            <td class="adm-first">
+              <div class="fw-semibold">{{ req.full_name }}</div>
+              <small class="text-muted text-break">{{ req.email }}</small>
+            </td>
+            <td data-label="Plan"><span class="badge rounded-pill bg-danger-subtle text-danger-emphasis">{{ req.plan_name }}</span></td>
+            <td data-label="Amount" class="fw-bold">₹{{ req.amount }}</td>
+            <td data-label="Transaction ID">
+              <span class="d-inline-flex align-items-center gap-1">
+                <code class="small text-body text-break">{{ req.transaction_id }}</code>
+                <button type="button" class="btn btn-sm btn-link p-0 adm-copy" data-copy="{{ req.transaction_id }}" title="Copy transaction ID" aria-label="Copy transaction ID"><i class="bi bi-clipboard"></i></button>
+              </span>
+            </td>
+            <td data-label="Generated Note"><code class="small text-secondary text-break">{{ req.unique_note }}</code></td>
+            <td data-label="Proof">
+              <a href="{{ url_for('static', filename=req.screenshot_path) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary"><i class="bi bi-image me-1"></i> View screenshot</a>
+            </td>
+            <td class="adm-block" data-label="Action">
+              <form action="{{ url_for('approve_payment', payment_id=req.id) }}" method="POST" class="d-flex flex-wrap align-items-center justify-content-center gap-2" onsubmit="return confirm('Approve this payment and start the subscription on the selected date?');">
+                <div>
+                  <label class="visually-hidden" for="start_date_{{ req.id }}">Start date</label>
+                  <input type="date" id="start_date_{{ req.id }}" name="start_date" required class="form-control form-control-sm">
+                </div>
+                <button type="submit" class="btn btn-sm btn-success fw-semibold"><i class="bi bi-check-lg me-1"></i> Approve</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="adm-empty py-5 text-center text-muted">
+              <i class="bi bi-check2-circle fs-2 d-block mb-2"></i>
+              No pending requests available.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.adm-copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy') || '';
+      var done = function () {
+        var i = btn.querySelector('i');
+        i.className = 'bi bi-clipboard-check text-success';
+        setTimeout(function () { i.className = 'bi bi-clipboard'; }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done); }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "admin_base.html" %}
+{% block title %}{{ 'Edit' if ad else 'New' }} login advertisement | Irumanam Admin{% endblock %}
+{% block content %}
+{% set values = form_data if form_data else {} %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-megaphone"></i> Login promotion</span>
+      <h1>{{ 'Edit advertisement' if ad else 'Create advertisement' }}</h1>
+      <p>Prepare a responsive login popup and preview it before enabling it for members.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('admin_advertisements') }}"><i class="bi bi-arrow-left me-1"></i> Advertisement history</a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" id="advertisementForm">
+    <div class="ad-form-grid">
+      <section class="admin-surface p-3 p-md-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="ad-title">Advertisement title</label>
+            <input class="form-control" id="ad-title" name="title" maxlength="120" required value="{{ values.get('title', ad['title'] if ad else '') }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="ad-description">Description</label>
+            <textarea class="form-control" id="ad-description" name="description" rows="3" maxlength="1000">{{ values.get('description', ad['description'] if ad else '') }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="ad-redirect">Optional redirect URL</label>
+            <input class="form-control" id="ad-redirect" name="redirect_url" type="url" maxlength="1000" placeholder="https://example.com" value="{{ values.get('redirect_url', ad['redirect_url'] if ad else '') }}">
+            <div class="form-text">Only complete HTTP or HTTPS links are accepted.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="ad-image">Advertisement image{% if not ad %} <span class="text-danger">*</span>{% endif %}</label>
+            <input class="form-control" id="ad-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" {% if not ad %}required{% endif %}>
+            <div class="form-text">PNG, JPG, or WEBP. The image is validated and re-encoded before secure storage. Maximum upload size: 3 MB.</div>
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold" for="ad-start">Start date</label>
+            <input class="form-control" id="ad-start" name="start_date" type="date" required value="{{ values.get('start_date', ad['start_date'] if ad else today) }}">
+          </div>
+          <div class="col-6">
+            <label class="form-label fw-semibold" for="ad-end">End date</label>
+            <input class="form-control" id="ad-end" name="end_date" type="date" required value="{{ values.get('end_date', ad['end_date'] if ad else default_end_date) }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="ad-days">Display duration (days)</label>
+            <input class="form-control" id="ad-days" name="display_days" type="number" min="1" max="365" required value="{{ values.get('display_days', ad['display_days'] if ad else 7) }}">
+            <div class="form-text">The ad expires on the earlier of this duration or its end date.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="ad-frequency">Display frequency</label>
+            <select class="form-select" id="ad-frequency" name="display_frequency" required>
+              {% for key, label in frequencies.items() %}
+              <option value="{{ key }}" {% if values.get('display_frequency', ad['display_frequency'] if ad else 'DAILY') == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="ad-audience">Target users</label>
+            <select class="form-select" id="ad-audience" name="target_audience" required>
+              {% for key, label in audiences.items() %}
+              <option value="{{ key }}" {% if values.get('target_audience', ad['target_audience'] if ad else 'ALL') == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12" id="selectedUsersField">
+            <label class="form-label fw-semibold" for="ad-users">Selected approved members</label>
+            <input class="form-control mb-2" id="ad-user-search" type="search" placeholder="Filter members by name or Matrimony ID" aria-label="Filter members">
+            <select class="form-select ad-audience-users" id="ad-users" name="selected_users" multiple size="8">
+              {% for member in members %}
+              <option value="{{ member['id'] }}" data-search="{{ (member['full_name'] ~ ' ' ~ member['matrimony_id'])|lower }}" {% if member['id'] in selected_users or (values.getlist is defined and member['id']|string in values.getlist('selected_users')) %}selected{% endif %}>
+                {{ member['full_name'] }} · {{ member['matrimony_id'] }} · {{ member['gender'] }} · {{ member['plan']|title }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Use Ctrl or Command to select more than one member.</div>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="ad-enabled" name="is_enabled" value="1" {% if values.get('is_enabled', '1' if ad and ad['is_enabled'] else '') == '1' %}checked{% endif %}>
+              <label class="form-check-label fw-semibold" for="ad-enabled">Enable advertisement</label>
+              <div class="form-text">Future start dates remain scheduled; ended or disabled advertisements never appear to users.</div>
+            </div>
+          </div>
+          <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+            <button type="button" class="btn btn-outline-primary" id="ad-preview-button"><i class="bi bi-eye me-1"></i> Preview popup</button>
+            <button type="submit" class="btn btn-brand"><i class="bi bi-check2-circle me-1"></i> {{ 'Save advertisement' if ad else 'Create advertisement' }}</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin_advertisements') }}">Cancel</a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="ad-preview-frame" id="ad-preview-frame" aria-live="polite">
+        <div class="ad-preview-media">
+          <img id="ad-preview-image" src="{{ url_for('admin_advertisement_image', ad_id=ad['id']) if ad else '' }}" alt="Advertisement preview" {% if not ad %}hidden{% endif %}>
+          <span id="ad-preview-placeholder" class="text-secondary p-4 text-center" {% if ad %}hidden{% endif %}>Choose an image to preview the advertisement.</span>
+        </div>
+        <div class="ad-preview-copy">
+          <span class="login-ad-label"><i class="bi bi-stars"></i> Sponsored preview</span>
+          <h3 id="ad-preview-title">{{ values.get('title', ad['title'] if ad else 'Your advertisement title') }}</h3>
+          <p class="text-secondary mb-0" id="ad-preview-description">{{ values.get('description', ad['description'] if ad else 'Your description will appear here.') }}</p>
+          <div class="mt-3"><span class="btn btn-sm btn-outline-secondary" id="ad-preview-link">{{ 'Learn more' if values.get('redirect_url', ad['redirect_url'] if ad else '') else 'Optional link not set' }}</span></div>
+        </div>
+      </aside>
+    </div>
+  </form>
+</div>
+<div class="modal fade login-ad-modal" id="adPreviewModal" tabindex="-1" aria-labelledby="adPreviewModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content login-ad-content">
+      <button class="login-ad-close" type="button" data-bs-dismiss="modal" aria-label="Close preview"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+      <div class="login-ad-image-wrap">
+        <img class="login-ad-image" id="ad-popup-preview-image" src="{{ url_for('admin_advertisement_image', ad_id=ad['id']) if ad else '' }}" alt="Advertisement image preview" {% if not ad %}hidden{% endif %}>
+        <span id="ad-popup-preview-placeholder" class="text-secondary p-4 text-center" {% if ad %}hidden{% endif %}>Choose an image to preview the advertisement.</span>
+      </div>
+      <div class="login-ad-copy">
+        <span class="login-ad-label"><i class="bi bi-stars"></i> Sponsored preview</span>
+        <h2 id="adPreviewModalTitle">{{ values.get('title', ad['title'] if ad else 'Your advertisement title') }}</h2>
+        <p id="ad-preview-modal-description">{{ values.get('description', ad['description'] if ad else 'Your description will appear here.') }}</p>
+        <a class="btn-or" id="ad-preview-modal-link" href="{{ values.get('redirect_url', ad['redirect_url'] if ad else '') or '#' }}" {% if not values.get('redirect_url', ad['redirect_url'] if ad else '') %}hidden{% else %}target="_blank" rel="noopener noreferrer"{% endif %}>Learn more <i class="bi bi-arrow-up-right"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (() => {
+    const form = document.getElementById("advertisementForm");
+    const title = document.getElementById("ad-title");
+    const description = document.getElementById("ad-description");
+    const redirect = document.getElementById("ad-redirect");
+    const imageInput = document.getElementById("ad-image");
+    const imagePreview = document.getElementById("ad-preview-image");
+    const popupImagePreview = document.getElementById("ad-popup-preview-image");
+    const placeholder = document.getElementById("ad-preview-placeholder");
+    const popupPlaceholder = document.getElementById("ad-popup-preview-placeholder");
+    const audience = document.getElementById("ad-audience");
+    const selectedUsers = document.getElementById("selectedUsersField");
+    const usersSearch = document.getElementById("ad-user-search");
+    const userOptions = Array.from(document.querySelectorAll("#ad-users option"));
+    let localImageUrl = null;
+    const updatePreview = () => {
+      document.getElementById("ad-preview-title").textContent = title.value || "Your advertisement title";
+      document.getElementById("ad-preview-description").textContent = description.value || "Your description will appear here.";
+      document.getElementById("ad-preview-link").textContent = redirect.value ? "Learn more" : "Optional link not set";
+      document.getElementById("adPreviewModalTitle").textContent = title.value || "Your advertisement title";
+      document.getElementById("ad-preview-modal-description").textContent = description.value || "Your description will appear here.";
+      const popupLink = document.getElementById("ad-preview-modal-link");
+      popupLink.hidden = !redirect.value;
+      popupLink.href = redirect.value || "#";
+    };
+    const updateAudience = () => {
+      selectedUsers.hidden = audience.value !== "SELECTED";
+      document.getElementById("ad-users").required = audience.value === "SELECTED";
+    };
+    [title, description, redirect].forEach((field) => field.addEventListener("input", updatePreview));
+    audience.addEventListener("change", updateAudience);
+    updateAudience();
+    imageInput.addEventListener("change", () => {
+      const file = imageInput.files && imageInput.files[0];
+      if (!file) return;
+      if (localImageUrl) URL.revokeObjectURL(localImageUrl);
+      localImageUrl = URL.createObjectURL(file);
+      imagePreview.src = localImageUrl;
+      popupImagePreview.src = localImageUrl;
+      imagePreview.hidden = false;
+      popupImagePreview.hidden = false;
+      placeholder.hidden = true;
+      popupPlaceholder.hidden = true;
+    });
+    usersSearch.addEventListener("input", () => {
+      const query = usersSearch.value.trim().toLowerCase();
+      userOptions.forEach((option) => {
+        option.hidden = query !== "" && !option.dataset.search.includes(query);
+      });
+    });
+    document.getElementById("ad-preview-button").addEventListener("click", () => {
+      updatePreview();
+      if (!window.bootstrap) {
+        console.error("The advertisement preview requires Bootstrap to finish loading.");
+        return;
+      }
+      window.bootstrap.Modal.getOrCreateInstance(document.getElementById("adPreviewModal")).show();
+    });
+    form.addEventListener("submit", (event) => {
+      const start = document.getElementById("ad-start");
+      const end = document.getElementById("ad-end");
+      if (start.value && end.value && end.value < start.value) {
+        event.preventDefault();
+        end.setCustomValidity("The end date must be on or after the start date.");
+        end.reportValidity();
+      } else {
+        end.setCustomValidity("");
+      }
+    });
+  })();
+</script>
+{% endblock %}

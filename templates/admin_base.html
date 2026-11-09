@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#212529">
+  <meta name="csrf-token" content="{{ session.get('csrf_token', '') }}">
+  <title>{% block title %}Admin | Irumanam{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/ui2.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/ui3.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/ui4.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/modern.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/advertisements.css') }}" rel="stylesheet">
+</head>
+<body class="admin-body{% if request.endpoint == 'admin_login' %} adm-login-page{% endif %}">
+<header class="admin-topbar" id="adminSidebar">
+  <div class="admin-sidebar-brand">
+    <a class="admin-brand" href="{{ url_for('admin_dashboard') if logged_in_user and logged_in_user['is_admin'] else url_for('admin_login') }}" aria-label="Irumanam admin home">
+      <img class="brand-logo" src="{{ url_for('static', filename='images/irumanam-logo.png') }}" alt="Irumanam">
+      <span class="admin-brand-label">Admin workspace<small>Irumanam control panel</small></span>
+    </a>
+    <button class="admin-sidebar-close" type="button" id="adminSidebarClose" aria-label="Close navigation"><i class="bi bi-x-lg"></i></button>
+  </div>
+    {% if logged_in_user and logged_in_user['is_admin'] %}
+    <nav class="admin-nav" aria-label="Admin navigation">
+      <span class="admin-nav-caption">Workspace</span>
+      {% if can_admin('dashboard') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_dashboard', 'admin_view_profile'] else 'btn-outline-dark' }}" href="{{ url_for('admin_dashboard') }}" aria-label="Dashboard" title="Dashboard">
+        <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+      </a>{% endif %}
+      {% if can_admin('members') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_users', 'admin_user_edit', 'admin_user_action'] else 'btn-outline-dark' }}" href="{{ url_for('admin_users') }}" aria-label="Approved members" title="Approved members">
+        <i class="bi bi-people"></i><span>Members</span>
+      </a>{% endif %}
+      {% if can_admin('payments') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_premium_payments', 'admin_payment_screenshot', 'admin_review_premium_payment'] else 'btn-outline-dark' }}" href="{{ url_for('admin_premium_payments') }}" aria-label="Premium payments" title="Premium payments">
+        <i class="bi bi-credit-card"></i><span>Premium payments</span>
+      </a>{% endif %}
+      {% if can_admin('support') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_support', 'admin_support_conversation'] else 'btn-outline-dark' }}" href="{{ url_for('admin_support') }}" aria-label="Support" title="Support">
+        <i class="bi bi-headset"></i><span>Support</span>{% if support_unread_count %}<span class="badge rounded-pill bg-danger ms-1" id="adminSupportBadge">{{ support_unread_count }}</span>{% endif %}
+      </a>{% endif %}
+      {% if can_admin('keys') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_support_auto_replies', 'admin_support_auto_reply_delete'] else 'btn-outline-dark' }}" href="{{ url_for('admin_support_auto_replies') }}" aria-label="Auto-replies" title="Auto-replies">
+        <i class="bi bi-chat-square-text"></i><span>Auto-replies</span>
+      </a>{% endif %}
+      {% if can_admin('notifications') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_notifications', 'admin_open_notification'] else 'btn-outline-dark' }}" href="{{ url_for('admin_notifications') }}" aria-label="Notifications" title="Notifications">
+        <i class="bi bi-bell"></i><span>Notifications</span>
+      </a>{% endif %}
+      {% if can_admin('faqs') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint == 'admin_faqs' else 'btn-outline-dark' }}" href="{{ url_for('admin_faqs') }}" aria-label="FAQs" title="FAQs">
+        <i class="bi bi-question-circle"></i><span>FAQs</span>
+      </a>{% endif %}
+      {% if can_admin('advertisements') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_advertisements', 'admin_advertisement_form', 'admin_advertisement_action'] else 'btn-outline-dark' }}" href="{{ url_for('admin_advertisements') }}" aria-label="Login advertisements" title="Login advertisements">
+        <i class="bi bi-megaphone"></i><span>Advertisements</span>
+      </a>{% endif %}
+      {% if can_admin('reports') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_reports', 'admin_reports_export', 'admin_reports_xlsx'] else 'btn-outline-dark' }}" href="{{ url_for('admin_reports') }}" aria-label="Reports" title="Reports">
+        <i class="bi bi-bar-chart-line"></i><span>Reports</span>
+      </a>{% endif %}
+      {% if logged_in_user['admin_role'] == 'SUPER_ADMIN' %}
+      <a class="btn btn-sm {{ 'btn-dark' if request.endpoint in ['admin_accounts', 'admin_account_action'] else 'btn-outline-dark' }}" href="{{ url_for('admin_accounts') }}" aria-label="Admin accounts" title="Admin accounts">
+        <i class="bi bi-person-gear"></i><span>Admin accounts</span>
+      </a>
+      {% endif %}
+      {% if can_admin('activity') %}<a class="btn btn-sm {{ 'btn-dark' if request.endpoint == 'admin_activity' else 'btn-outline-dark' }}" href="{{ url_for('admin_activity') }}" aria-label="Activity and logins" title="Activity and logins">
+        <i class="bi bi-clock-history"></i><span>Activity &amp; logins</span>
+      </a>{% endif %}
+      {% if can_admin('reports') %}<a class="btn btn-sm {{ 'btn-outline-dark' if request.endpoint != 'admin_reports_xlsx' else 'btn-dark' }}" href="{{ url_for('admin_reports_xlsx') }}" aria-label="Export reports" title="Export reports">
+        <i class="bi bi-file-earmark-excel"></i><span>Export reports</span>
+      </a>{% endif %}
+    </nav>
+    <div class="admin-sidebar-footer">
+      <span class="admin-sidebar-user"><i class="bi bi-shield-check"></i><span><b>{{ logged_in_user['full_name'] }}</b><small>Administrator</small></span></span>
+      <a class="admin-sidebar-action" href="{{ url_for('index') }}" aria-label="View site" title="View site"><i class="bi bi-box-arrow-up-right"></i><span>View site</span></a>
+      <form method="post" action="{{ url_for('logout') }}">
+        <button class="admin-sidebar-action admin-logout" type="submit" aria-label="Logout" title="Logout"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
+      </form>
+    </div>
+    {% else %}
+    <div class="admin-sidebar-footer">
+      <a class="admin-sidebar-action" href="{{ url_for('index') }}"><i class="bi bi-box-arrow-up-right"></i><span>View site</span></a>
+      <a class="admin-sidebar-action" href="{{ url_for('admin_login') }}"><i class="bi bi-shield-lock"></i><span>Admin login</span></a>
+    </div>
+    {% endif %}
+</header>
+{% if logged_in_user and logged_in_user['is_admin'] %}
+<div class="admin-mobile-overlay" id="adminSidebarOverlay"></div>
+{% endif %}
+<div class="admin-main">
+  <div class="admin-utilitybar">
+    <button class="admin-sidebar-toggle" type="button" id="adminSidebarToggle" aria-controls="adminSidebar" aria-expanded="false" aria-label="Open admin navigation"><i class="bi bi-list"></i></button>
+    <div class="admin-utility-title"><span>Irumanam</span><small>Administration</small></div>
+    {% if logged_in_user and logged_in_user['is_admin'] %}<button class="admin-sidebar-collapse" type="button" id="adminSidebarCollapse" aria-label="Collapse navigation" title="Collapse navigation"><i class="bi bi-layout-sidebar"></i></button>{% endif %}
+    {% if logged_in_user and logged_in_user['is_admin'] %}
+    {% if can_admin('notifications') %}
+    <div class="dropdown ms-auto">
+      <button class="btn btn-sm admin-notification-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Admin notifications">
+        <i class="bi bi-bell"></i><span class="d-none d-sm-inline">Alerts</span>
+        <span class="badge rounded-pill bg-danger{% if not admin_unread_count %} d-none{% endif %}" id="adminNotificationBadge">{{ admin_unread_count }}</span>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end admin-notification-menu">
+        <div class="admin-notification-menu-head"><strong>Activity alerts</strong><a href="{{ url_for('admin_notifications') }}">View all</a></div>
+        <div id="adminNotificationItems">
+          {% for item in admin_notifs %}
+          <a class="admin-notification-item" href="{{ url_for('admin_open_notification', notification_id=item['id']) }}">
+            <span class="admin-notification-icon"><i class="bi bi-bell"></i></span>
+            <span><b>{{ item['title'] }}</b><small>{{ item['body']|truncate(90) }}</small><time>{{ item['created_at'] }}</time></span>
+          </a>
+          {% else %}
+          <p class="admin-notification-empty">No activity alerts yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+<main class="admin-content">
+  <div class="flash-container" aria-live="polite" aria-atomic="false">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      {% set icon = {'success':'check-circle-fill','danger':'exclamation-octagon-fill','warning':'exclamation-triangle-fill','info':'info-circle-fill'}.get(category,'info-circle-fill') %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show app-toast" role="{{ 'alert' if category in ['danger','warning'] else 'status' }}">
+        <i class="bi bi-{{ icon }} app-toast-icon" aria-hidden="true"></i><span>{{ message }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss notification"></button>
+      </div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+  <div class="{% if request.endpoint == 'admin_login' %}admin-page{% endif %}">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+<footer class="site-footer mt-5">
+  <div class="container py-4 d-flex justify-content-between flex-wrap gap-2 small text-white-50">
+    <span>Irumanam · Admin Control Panel</span>
+    <span>© 2026 Irumanam</span>
+  </div>
+</footer>
+</div>
+{% if logged_in_user and logged_in_user['is_admin'] and can_admin('notifications') %}
+<div class="admin-live-alerts" id="adminLiveAlerts" aria-live="polite" aria-atomic="false"></div>
+<script>
+(() => {
+  const pollUrl = {{ url_for('admin_notifications_poll')|tojson }};
+  let latestId = {{ admin_latest_id|int }};
+  const badge = document.getElementById("adminNotificationBadge");
+  let supportBadge = document.getElementById("adminSupportBadge");
+  const items = document.getElementById("adminNotificationItems");
+  const alerts = document.getElementById("adminLiveAlerts");
+  const addToast = (notification) => {
+    const link = document.createElement("a");
+    link.className = "admin-live-alert";
+    link.href = {{ url_for('admin_open_notification', notification_id=0)|tojson }}.replace("/0/", "/" + notification.id + "/");
+    const icon = document.createElement("i");
+    icon.className = "bi bi-bell-fill";
+    const content = document.createElement("span");
+    const title = document.createElement("strong");
+    title.textContent = notification.title;
+    const body = document.createElement("small");
+    body.textContent = notification.body;
+    content.append(title, body);
+    link.append(icon, content);
+    alerts.prepend(link);
+    window.setTimeout(() => link.remove(), 10000);
+  };
+  const addMenuItem = (notification) => {
+    const empty = items.querySelector(".admin-notification-empty");
+    if (empty) empty.remove();
+    const link = document.createElement("a");
+    link.className = "admin-notification-item";
+    link.href = {{ url_for('admin_open_notification', notification_id=0)|tojson }}.replace("/0/", "/" + notification.id + "/");
+    const icon = document.createElement("span");
+    icon.className = "admin-notification-icon";
+    icon.innerHTML = '<i class="bi bi-bell"></i>';
+    const content = document.createElement("span");
+    const title = document.createElement("b");
+    title.textContent = notification.title;
+    const body = document.createElement("small");
+    body.textContent = notification.body;
+    const time = document.createElement("time");
+    time.textContent = notification.created_at;
+    content.append(title, body, time);
+    link.append(icon, content);
+    items.prepend(link);
+    while (items.querySelectorAll(".admin-notification-item").length > 8) {
+      items.lastElementChild.remove();
+    }
+  };
+  const poll = async () => {
+    try {
+      const response = await fetch(pollUrl + "?after=" + latestId, { headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("Unable to refresh admin alerts.");
+      const data = await response.json();
+      latestId = Math.max(latestId, data.notifications.length ? data.notifications[data.notifications.length - 1].id : data.latest_id);
+      badge.textContent = data.unread_count;
+      badge.classList.toggle("d-none", data.unread_count === 0);
+      if (data.support_unread_count > 0) {
+        if (!supportBadge) {
+          const supportLink = Array.from(document.querySelectorAll(".admin-nav a")).find((link) => link.getAttribute("href") === {{ url_for('admin_support')|tojson }});
+          if (supportLink) {
+            supportBadge = document.createElement("span");
+            supportBadge.id = "adminSupportBadge";
+            supportBadge.className = "badge rounded-pill bg-danger ms-1";
+            supportLink.append(supportBadge);
+          }
+        }
+        if (supportBadge) supportBadge.textContent = data.support_unread_count;
+      } else if (supportBadge) {
+        supportBadge.remove();
+      }
+      data.notifications.forEach((notification) => {
+        addToast(notification);
+        addMenuItem(notification);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  window.setInterval(poll, 2500);
+})();
+</script>
+{% endif %}
+<script>
+(() => {
+  const sidebar = document.getElementById("adminSidebar");
+  const toggle = document.getElementById("adminSidebarToggle");
+  const collapse = document.getElementById("adminSidebarCollapse");
+  const close = document.getElementById("adminSidebarClose");
+  const overlay = document.getElementById("adminSidebarOverlay");
+  if (!sidebar) return;
+  const collapsedKey = "irumanam-admin-sidebar-collapsed";
+  const applyDesktopState = () => {
+    const collapsed = window.innerWidth > 991 && window.localStorage.getItem(collapsedKey) === "true";
+    document.body.classList.toggle("admin-sidebar-collapsed", collapsed);
+    if (collapse) {
+      collapse.setAttribute("aria-label", collapsed ? "Expand navigation" : "Collapse navigation");
+      collapse.setAttribute("title", collapsed ? "Expand navigation" : "Collapse navigation");
+    }
+  };
+  applyDesktopState();
+  if (collapse) {
+    collapse.addEventListener("click", () => {
+      if (window.innerWidth <= 991) return;
+      const collapsed = document.body.classList.toggle("admin-sidebar-collapsed");
+      window.localStorage.setItem(collapsedKey, String(collapsed));
+      collapse.setAttribute("aria-label", collapsed ? "Expand navigation" : "Collapse navigation");
+      collapse.setAttribute("title", collapsed ? "Expand navigation" : "Collapse navigation");
+    });
+  }
+  window.addEventListener("resize", applyDesktopState);
+  if (!toggle || !overlay) return;
+  const setOpen = (open) => {
+    sidebar.classList.toggle("is-open", open);
+    overlay.classList.toggle("is-visible", open);
+    toggle.setAttribute("aria-expanded", String(open));
+    document.body.classList.toggle("admin-sidebar-open", open);
+  };
+  toggle.addEventListener("click", () => setOpen(!sidebar.classList.contains("is-open")));
+  if (close) close.addEventListener("click", () => setOpen(false));
+  overlay.addEventListener("click", () => setOpen(false));
+  sidebar.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => setOpen(false)));
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setOpen(false);
+  });
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

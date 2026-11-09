@@ -1,0 +1,76 @@
+{% extends "admin_login_base.html" %}
+{% block title %}Admin Login | Irumanam{% endblock %}
+{% block content %}
+<section class="adm-login-layout" aria-labelledby="admin-login-title">
+  <div class="adm-login-promo">
+    <div class="adm-login-orb adm-login-orb-one"></div>
+    <div class="adm-login-orb adm-login-orb-two"></div>
+    <div class="adm-login-promo-content">
+      <span class="adm-login-eyebrow"><i class="bi bi-stars"></i> Irumanam management</span>
+      <div class="adm-login-emblem"><i class="bi bi-shield-lock-fill"></i></div>
+      <h1>Welcome to your<br><span>admin workspace.</span></h1>
+      <p>One secure place to review member profiles, manage subscriptions, and support your community.</p>
+      <div class="adm-login-features">
+        <div><i class="bi bi-person-check"></i><span>Member profile reviews</span></div>
+        <div><i class="bi bi-credit-card-2-front"></i><span>Subscription management</span></div>
+        <div><i class="bi bi-lock"></i><span>Protected administrator access</span></div>
+      </div>
+    </div>
+    <div class="adm-login-promo-foot"><span>Thoughtful connections start with a trusted community.</span><i class="bi bi-heart-fill"></i></div>
+  </div>
+
+  <div class="adm-login-panel">
+    <div class="adm-login-card">
+      <span class="adm-login-mobile-mark"><i class="bi bi-shield-lock-fill"></i> ADMIN PORTAL</span>
+      <span class="adm-login-kicker">SECURE SIGN IN</span>
+      <h2 id="admin-login-title">Sign in to continue</h2>
+      <p class="adm-login-subtitle">Use your administrator account to access the control panel.</p>
+
+      <form method="post" action="{{ url_for('admin_login') }}" autocomplete="on">
+        <div class="mb-3">
+          <label for="identifier" class="form-label">Email or mobile number</label>
+          <div class="input-group adm-login-input">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" class="form-control" id="identifier" name="identifier"
+                   placeholder="Enter your admin email or mobile" autocomplete="username" autofocus required>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-group adm-login-input">
+            <span class="input-group-text"><i class="bi bi-key"></i></span>
+            <input type="password" class="form-control adm-password-field" id="password" name="password"
+                   placeholder="Enter your password" autocomplete="current-password" required>
+            <button class="input-group-text adm-toggle-pw" id="togglePw" type="button"
+                    aria-label="Show password" aria-controls="password" aria-pressed="false">
+              <i class="bi bi-eye" id="togglePwIcon" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn adm-login-submit w-100">
+          <span>Sign in securely</span><i class="bi bi-arrow-right"></i>
+        </button>
+      </form>
+      <div class="adm-login-secure-note"><i class="bi bi-shield-check"></i><span>Your sign-in is protected and only available to authorized administrators.</span></div>
+    </div>
+  </div> 
+</section>
+
+<script>
+  (function () {
+    var btn = document.getElementById('togglePw');
+    var input = document.getElementById('password');
+    var icon = document.getElementById('togglePwIcon');
+    function toggle() {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+    }
+    btn.addEventListener('click', toggle);
+  })();
+</script>
+{% endblock %}

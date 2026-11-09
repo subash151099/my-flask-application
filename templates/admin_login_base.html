@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#53152b">
+  <meta name="csrf-token" content="{{ session.get('csrf_token', '') }}">
+  <title>{% block title %}Admin Login | Irumanam{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/modern.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/admin.css') }}" rel="stylesheet">
+</head>
+<body class="admin-body adm-login-page">
+  <header class="adm-login-topbar">
+    <div class="container d-flex align-items-center justify-content-between gap-3">
+      <a href="{{ url_for('admin_login') }}" class="adm-login-brand" aria-label="Irumanam admin login">
+        <img src="{{ url_for('static', filename='images/irumanam-logo.png') }}" alt="Irumanam">
+        <span>ADMIN <b>PORTAL</b></span>
+      </a>
+      <a class="adm-login-back" href="{{ url_for('index') }}"><i class="bi bi-arrow-left"></i><span>Back to website</span></a>
+    </div>
+  </header>
+  <main class="adm-login-main">
+    <div class="container">
+      <div class="adm-login-flashes">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          {% endfor %}
+        {% endwith %}
+      </div>
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+  <footer class="adm-login-footer">
+    <span><i class="bi bi-shield-lock-fill"></i> Restricted to authorized administrators</span>
+    <span>Irumanam · Admin Portal</span>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
+</body>
+</html>

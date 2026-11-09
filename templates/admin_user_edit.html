@@ -1,0 +1,50 @@
+{% extends "admin_base.html" %}
+{% block title %}Edit Member | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div><span class="admin-kicker"><i class="bi bi-person-gear"></i> Member management</span><h1>Edit member</h1><p>Update account, membership, and profile information.</p></div>
+    <a class="btn btn-outline-dark btn-sm" href="{{ url_for('admin_users') }}"><i class="bi bi-arrow-left me-1"></i> Back to members</a>
+  </div>
+  <form method="post" class="card admin-surface dashboard-card">
+    <h2 class="h5 fw-bold mb-3">Account details</h2>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label" for="full_name">Full name</label><input class="form-control" id="full_name" name="full_name" value="{{ member['full_name'] }}" required minlength="2" maxlength="100"></div>
+      <div class="col-md-6"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" value="{{ member['email'] }}" required maxlength="254"></div>
+      <div class="col-md-6"><label class="form-label" for="mobile">Mobile</label><input class="form-control" id="mobile" name="mobile" value="{{ member['mobile'] }}" required pattern="^\+?[0-9]{10,15}$"></div>
+      <div class="col-md-6"><label class="form-label" for="gender">Profile type</label><select class="form-select" id="gender" name="gender" required><option value="Bride" {% if member['gender']=='Bride' %}selected{% endif %}>Bride</option><option value="Groom" {% if member['gender']=='Groom' %}selected{% endif %}>Groom</option></select></div>
+      <div class="col-md-6"><label class="form-label" for="date_of_birth">Date of birth</label><input class="form-control" id="date_of_birth" name="date_of_birth" type="date" value="{{ member['date_of_birth'] }}" required></div>
+      <div class="col-md-6"><label class="form-label" for="is_approved">Approval status</label><select class="form-select" id="is_approved" name="is_approved" required>{% for status in ['APPROVED','PENDING','REJECTED'] %}<option value="{{ status }}" {% if member['is_approved']==status %}selected{% endif %}>{{ status|title }}</option>{% endfor %}</select></div>
+      <div class="col-12"><label class="form-label" for="rejection_reason">Rejection reason</label><textarea class="form-control" id="rejection_reason" name="rejection_reason" maxlength="300" rows="2">{{ member['rejection_reason'] or '' }}</textarea></div>
+    </div>
+
+    <hr class="my-4">
+    <h2 class="h5 fw-bold mb-3">Membership</h2>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label" for="plan">Plan</label><select class="form-select" id="plan" name="plan" required>{% for plan in ['FREE','SILVER','GOLD','PLATINUM','DIAMOND'] %}<option value="{{ plan }}" {% if member['plan']==plan %}selected{% endif %}>{{ plan|title }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label" for="plan_until">Premium expiry</label><input class="form-control" id="plan_until" name="plan_until" type="date" value="{{ member['plan_until'] or '' }}"><div class="form-text">Required for paid plans. Ignored for Free.</div></div>
+    </div>
+
+    <hr class="my-4">
+    <h2 class="h5 fw-bold mb-3">Profile details</h2>
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label" for="profile_created_by">Profile created by</label><select class="form-select" id="profile_created_by" name="profile_created_by">{% for value in ['Self','Parent','Sibling','Relative','Friend'] %}<option value="{{ value }}" {% if member['profile_created_by']==value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label" for="marital_status">Marital status</label><select class="form-select" id="marital_status" name="marital_status">{% for value in ['Never Married','Divorced','Widowed','Awaiting Divorce'] %}<option value="{{ value }}" {% if member['marital_status']==value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label" for="education">Qualification</label><input class="form-control" id="education" name="education" value="{{ member['education'] or '' }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="occupation">Occupation</label><input class="form-control" id="occupation" name="occupation" value="{{ member['occupation'] or '' }}" maxlength="120"></div>
+      <div class="col-md-6"><label class="form-label" for="religion">Religion</label><input class="form-control" id="religion" name="religion" value="{{ member['religion'] or '' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="mother_tongue">Mother tongue</label><input class="form-control" id="mother_tongue" name="mother_tongue" value="{{ member['mother_tongue'] or '' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="caste">Caste / community</label><input class="form-control" id="caste" name="caste" value="{{ member['caste'] or '' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="diet">Diet</label><select class="form-select" id="diet" name="diet"><option value="">Not specified</option>{% for value in ['Vegetarian','Non-Vegetarian','Eggetarian','Vegan'] %}<option value="{{ value }}" {% if member['diet']==value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></div>
+      <div class="col-md-6"><label class="form-label" for="country">Country</label><input class="form-control" id="country" name="country" value="{{ member['country'] or 'India' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="state">State</label><input class="form-control" id="state" name="state" value="{{ member['state'] or '' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="city">City</label><input class="form-control" id="city" name="city" value="{{ member['city'] or '' }}" maxlength="80"></div>
+      <div class="col-md-6"><label class="form-label" for="height_cm">Height (cm)</label><input class="form-control" id="height_cm" name="height_cm" type="number" min="120" max="230" value="{{ member['height_cm'] or '' }}"></div>
+      <div class="col-md-6"><label class="form-label" for="star">Star</label><input class="form-control" id="star" name="star" value="{{ member['star'] or '' }}" maxlength="40"></div>
+      <div class="col-md-6"><label class="form-label" for="raasi">Raasi</label><input class="form-control" id="raasi" name="raasi" value="{{ member['raasi'] or '' }}" maxlength="40"></div>
+      <div class="col-12"><label class="form-label" for="about_me">Bio</label><textarea class="form-control" id="about_me" name="about_me" maxlength="1000" rows="4">{{ member['about_me'] or '' }}</textarea></div>
+      <div class="col-12 d-flex gap-2"><button class="btn btn-brand" type="submit"><i class="bi bi-check-lg me-1"></i> Save changes</button><a class="btn btn-outline-secondary" href="{{ url_for('admin_users') }}">Cancel</a></div>
+    </div>
+  </form>
+</div>
+{% endblock %}

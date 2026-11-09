@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar with context %}
+{% block title %}{% if logged_home %}Discover Matches | Irumanam{% else %}{{ seo_title }}{% endif %}{% endblock %}
+{% block content %}
+
+<style>
+  /* --- Modern Ultra-Stylish Matrimony UI Enhancements --- */
+  .member-home {
+    background: linear-gradient(135deg, #fdf2f4 0%, #fff5f7 100%);
+    min-height: 85vh;
+  }
+  .member-welcome {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(233, 30, 99, 0.06);
+    border: 1px solid rgba(233, 30, 99, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .member-welcome h1 {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 1.8rem;
+  }
+  .quick-stat {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    text-decoration: none;
+    color: #374151;
+    transition: all 0.3s ease;
+  }
+  .quick-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(233, 30, 99, 0.12);
+    border-color: rgba(233, 30, 99, 0.3);
+    color: #e91e63;
+  }
+  .quick-stat-icon {
+    width: 45px;
+    height: 45px;
+    background: #fdf2f4;
+    color: #e91e63;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.2rem;
+  }
+  .match-search-panel {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(233, 30, 99, 0.06);
+    border: 1px solid rgba(233, 30, 99, 0.1);
+  }
+
+  /* --- Enhanced Hero Art Section --- */
+  .hero-art-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 460px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Background Soft Glow Effect */
+  .hero-glow-effect {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(233, 30, 99, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    filter: blur(20px);
+    z-index: 1;
+  }
+
+  /* Outer Orbit Rings */
+  .hero-orbit {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(233, 30, 99, 0.25);
+    animation: rotateOrbit 30s linear infinite;
+  }
+  .orbit-one {
+    width: 320px;
+    height: 320px;
+  }
+  .orbit-two {
+    width: 410px;
+    height: 410px;
+    animation-direction: reverse;
+    animation-duration: 38s;
+    border-color: rgba(233, 30, 99, 0.15);
+  }
+  .orbit-three {
+    width: 460px;
+    height: 460px;
+    animation-duration: 50s;
+    border: 1px dotted rgba(233, 30, 99, 0.1);
+  }
+
+  @keyframes rotateOrbit {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Central Couple Logo Wrapper */
+  .hero-couple-png-wrap {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 15px 40px rgba(233, 30, 99, 0.15), 0 0 0 8px rgba(255, 255, 255, 0.8);
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .hero-couple-png-wrap:hover {
+    transform: scale(1.05);
+  }
+  .hero-couple-png-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Glassmorphism Floating Pill Badges */
+  .floating-round-badge {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 10px 20px;
+    border-radius: 50px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 3;
+    animation: floatAnim 4s ease-in-out infinite alternate;
+  }
+  .note-top {
+    top: 35px;
+    left: -20px;
+  }
+  .note-bottom {
+    bottom: 35px;
+    right: -20px;
+    animation-delay: 2s;
+  }
+
+  @keyframes floatAnim {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-10px); }
+  }
+
+  .badge-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fdf2f4;
+    color: #e91e63;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+  .badge-text b {
+    font-size: 0.88rem;
+    line-height: 1.2;
+  }
+  .badge-text small {
+    font-size: 0.75rem;
+  }
+
+</style>
+
+{% if logged_home %}
+<section class="member-home py-4 py-lg-5">
+  <div class="container">
+    <div class="member-welcome mb-4">
+      <div>
+        <span class="eyebrow text-uppercase text-danger fw-bold small">Your matrimony journey</span>
+        <h1>Hello, {{ user['full_name'].split(' ')[0] }} <span class="wave">♥</span></h1>
+        <p class="text-secondary mb-0">Discover profiles and take the next step towards a meaningful connection.</p>
+      </div>
+      <a class="btn btn-brand px-4 py-2" href="{{ url_for('edit_profile') }}"><i class="bi bi-pencil-square me-1"></i> Complete Profile</a>
+    </div>
+    
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3"><a class="quick-stat" href="{{ url_for('index') }}"><span class="quick-stat-icon"><i class="bi bi-people"></i></span><span><small class="text-muted d-block">Discover</small><strong>Matches</strong></span><i class="bi bi-chevron-right ms-auto text-muted"></i></a></div>
+      <div class="col-6 col-lg-3"><a class="quick-stat" href="{{ url_for('shortlist') }}"><span class="quick-stat-icon"><i class="bi bi-bookmark-heart"></i></span><span><small class="text-muted d-block">Your saved profiles</small><strong>Shortlist</strong></span><i class="bi bi-chevron-right ms-auto text-muted"></i></a></div>
+      <div class="col-6 col-lg-3"><a class="quick-stat" href="{{ url_for('interests') }}"><span class="quick-stat-icon"><i class="bi bi-heart"></i></span><span><small class="text-muted d-block">People interested</small><strong>Interests received</strong></span><i class="bi bi-chevron-right ms-auto text-muted"></i></a></div>
+      <div class="col-6 col-lg-3"><a class="quick-stat" href="{{ url_for('dashboard') }}"><span class="quick-stat-icon"><i class="bi bi-person-vcard"></i></span><span><small class="text-muted d-block">Your ID</small><strong>{{ user['matrimony_id'] }}</strong></span><i class="bi bi-chevron-right ms-auto text-muted"></i></a></div>
+    </div>
+    
+    <div class="match-search-panel mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+        <div>
+          <h2 class="fw-bold">Find your match</h2>
+          <p class="text-secondary mb-0">Search across all communities. Your preferences are yours to choose.</p>
+        </div>
+        <span class="privacy-note align-self-start badge bg-light text-dark border p-2"><i class="bi bi-shield-check text-success me-1"></i> Your journey, your choice</span>
+      </div>
+      <form action="{{ url_for('index') }}" method="get" class="row g-3 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label fw-semibold" for="gender">Looking for</label>
+          <select class="form-select" name="gender" id="gender">
+            <option value="">Bride or Groom</option>
+            <option value="Bride" {% if gender=='Bride' %}selected{% endif %}>Bride</option>
+            <option value="Groom" {% if gender=='Groom' %}selected{% endif %}>Groom</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label fw-semibold" for="q">Name, city, education, occupation or religion</label>
+          <input class="form-control" id="q" name="q" value="{{ query }}" placeholder="Try Chennai, Engineer, Tamil...">
+        </div>
+        <div class="col-12 col-md-3 d-flex gap-2">
+          <button class="btn btn-brand flex-grow-1" type="submit"><i class="bi bi-search me-1"></i> Search</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('index') }}" title="Clear search"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+      </form>
+    </div>
+    
+    <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-3">
+      <div>
+        <span class="eyebrow text-uppercase text-danger fw-bold small">Picked for discovery</span>
+        <h2 class="section-title mb-1 fw-bold">Profiles you may like</h2>
+        <p class="text-secondary mb-0">New members and profiles matching your search.</p>
+      </div>
+      <span class="badge bg-white text-secondary border px-3 py-2 shadow-sm">{{ profiles|length }} profile(s)</span>
+    </div>
+    
+    <div class="row g-3 g-lg-4">
+      {% for p in profiles %}
+      <div class="col-sm-6 col-xl-4">
+        {% set full_details = premium and p['premium_details_visible'] %}
+        <article class="mcard h-100">
+          <div class="mcard-media">
+            <a class="mcard-photo" href="{{ url_for('view_profile', profile_id=p['id']) }}">
+              {{ avatar(p) }}
+              <span class="mcard-shade"></span>
+              <div class="mcard-cap"><h3>{{ p['full_name'] }}<span>, {{ calculate_age(p['date_of_birth']) }}</span></h3></div>
+            </a>
+            <form class="mcard-save" method="post" action="{{ url_for('toggle_shortlist', profile_id=p['id']) }}">
+              <button type="submit" class="{{ 'on' if p['shortlisted'] }}" title="{{ 'Remove from shortlist' if p['shortlisted'] else 'Add to shortlist' }}"><i class="bi {{ 'bi-bookmark-heart-fill' if p['shortlisted'] else 'bi-bookmark-heart' }}"></i></button>
+            </form>
+          </div>
+          <div class="mcard-body">
+            {% if full_details %}
+              {% set rows = [('mortarboard', p['education']), ('briefcase', p['occupation']), ('geo-alt', [p['city'], p['state']]|select|join(', ')), ('rulers', (p['height_cm'] ~ ' cm') if p['height_cm'] else '')] %}
+            {% else %}
+              {% set rows = [('mortarboard', p['education']), ('geo-alt', [p['city'], p['state']]|select|join(', '))] %}
+            {% endif %}
+            <ul class="mdata">{% for ic, v in rows if v %}<li title="{{ v }}"><i class="bi bi-{{ ic }}"></i><span>{{ v }}</span></li>{% endfor %}</ul>
+            {% if full_details and p['caste'] %}<div class="mtags"><span>{{ p['caste'] }}</span></div>{% endif %}
+            <div class="mbtns">
+              {% if p['interested'] %}
+                <span class="pill ok"><i class="bi bi-check2"></i> Interest Sent</span>
+              {% else %}
+                <form method="post" action="{{ url_for('send_interest', profile_id=p['id']) }}"><button class="btn-or" type="submit"><i class="bi bi-heart"></i> Send Interest</button></form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      </div>
+      {% else %}
+      <div class="col-12">
+        <div class="empty-state text-center py-5 bg-white rounded shadow-sm">
+          <i class="bi bi-hearts display-4 text-danger mb-3"></i>
+          <h3>No profiles found just yet</h3>
+          <p class="text-secondary">Try a different search or come back as more members join Irumanam.</p>
+          <a href="{{ url_for('edit_profile') }}" class="btn btn-brand mt-2">Complete your profile</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <div class="member-safety-note mt-4 p-3 bg-white rounded shadow-sm border-start border-4 border-danger d-flex align-items-start gap-3">
+      <i class="bi bi-info-circle fs-4 text-danger"></i>
+      <div>
+        <strong>Stay safe while meeting someone new</strong>
+        <p class="mb-0 text-secondary small">Take your time, protect your personal information, and meet in a public place when you decide to meet offline.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% else %}
+<!-- Public Landing Page -->
+<section class="hero-section py-5">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="eyebrow text-danger fw-bold"><i class="bi bi-heart-fill me-1"></i> A meaningful beginning</span>
+        <h1 class="hero-title mt-3 display-5 fw-bold">Two hearts.<br><span class="text-danger">One beautiful</span> beginning.</h1>
+        <p class="hero-copy text-secondary lead fs-6">Meet someone who shares your values, dreams, and vision for the future. Irumanam welcomes people from all communities to begin their journey together.</p>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <a href="{{ url_for('register') }}" class="btn btn-brand btn-lg px-4">Create Your Profile <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="{{ url_for('login') }}" class="btn btn-outline-dark btn-lg px-4">Member Login</a>
+        </div>
+        <div class="trust-row mt-4 d-flex gap-4 text-muted small">
+          <span><i class="bi bi-shield-check text-success me-1"></i> Privacy-minded</span>
+          <span><i class="bi bi-people text-primary me-1"></i> For all communities</span>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-art-container">
+          <!-- Background Glow Effect -->
+          <div class="hero-glow-effect"></div>
+
+          <!-- Animated Orbit Rings -->
+          <div class="hero-orbit orbit-one"></div>
+          <div class="hero-orbit orbit-two"></div>
+          <div class="hero-orbit orbit-three"></div>
+          
+          <!-- Central Couple Logo Wrapper -->
+          <div class="hero-couple-png-wrap">
+            <img src="{{ url_for('static', filename='images/irumanam-logo.png') }}" alt="Irumanam Logo">
+          </div>
+          
+          <!-- Glassmorphism Floating Badges -->
+          <div class="floating-round-badge note-top">
+            <div class="badge-icon"><i class="bi bi-stars"></i></div>
+            <div class="badge-text">
+              <b class="d-block text-dark">Your Story</b>
+              <small class="text-muted">Starts here</small>
+            </div>
+          </div>
+          
+          <div class="floating-round-badge note-bottom">
+            <div class="badge-icon"><i class="bi bi-person-hearts"></i></div>
+            <div class="badge-text">
+              <b class="d-block text-dark">Meaningful Connections</b>
+              <small class="text-muted">Built around values</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container search-strip my-4">
+  <div class="search-panel bg-white p-4 rounded shadow-sm border">
+    <div class="mb-3">
+      <h2 class="section-title mb-1 h4 fw-bold">Start your search</h2>
+      <p class="text-secondary small mb-0">Discover profiles that could be right for you.</p>
+    </div>
+    <form action="{{ url_for('search') }}" method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">I'm looking for a</label>
+        <select class="form-select" name="gender">
+          <option value="Bride">Bride</option>
+          <option value="Groom">Groom</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold">Age from</label>
+        <input class="form-control" type="number" name="age_min" min="18" value="21">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small fw-semibold">to</label>
+        <input class="form-control" type="number" name="age_max" min="18" value="35">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">Religion</label>
+        <input class="form-control" name="religion" placeholder="e.g. Hindu">
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-brand w-100" type="submit">Let's Begin</button>
+      </div>
+    </form>
+    <p class="small text-secondary mt-3 mb-0">Create a free account to explore member profiles and manage your shortlist.</p>
+  </div>
+</section>
+
+<section class="container section-space py-5">
+  <div class="text-center section-heading mb-4">
+    <span class="eyebrow text-danger fw-bold small">Simple and thoughtful</span>
+    <h2 class="section-title fw-bold">Your journey in three steps</h2>
+    <p class="text-secondary">A simple way to begin a meaningful connection.</p>
+  </div>
+  <div class="row g-4 mt-2">
+    <div class="col-md-4">
+      <div class="step-card bg-white p-4 rounded shadow-sm border h-100 text-center">
+        <div class="step-icon text-danger fs-1 mb-2"><i class="bi bi-person-plus"></i></div>
+        <span class="badge bg-light text-danger mb-2">01</span>
+        <h3 class="h5 fw-bold">Create your profile</h3>
+        <p class="text-secondary small mb-0">Share a little about yourself, your background, and what matters to you.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="step-card bg-white p-4 rounded shadow-sm border h-100 text-center">
+        <div class="step-icon text-danger fs-1 mb-2"><i class="bi bi-search-heart"></i></div>
+        <span class="badge bg-light text-danger mb-2">02</span>
+        <h3 class="h5 fw-bold">Discover matches</h3>
+        <p class="text-secondary small mb-0">Explore profiles from all communities and find people with shared values.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="step-card bg-white p-4 rounded shadow-sm border h-100 text-center">
+        <div class="step-icon text-danger fs-1 mb-2"><i class="bi bi-chat-heart"></i></div>
+        <span class="badge bg-light text-danger mb-2">03</span>
+        <h3 class="h5 fw-bold">Express interest</h3>
+        <p class="text-secondary small mb-0">Shortlist profiles you like and express interest when you are ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- About Company Section -->
+<section class="py-5 bg-white border-top border-bottom">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="eyebrow text-danger fw-bold small text-uppercase">About Irumanam</span>
+        <h2 class="fw-bold display-6 mt-1 mb-3">Connecting hearts with trust, care, and authenticity</h2>
+        <p class="text-secondary">
+          <strong>Irumanam</strong> is a modern, reliable, and secure matchmaking platform created to bring compatible life partners together. We understand that marriage is one of life's most important milestones, and finding the right companion requires an environment built on trust, respect, and shared values.
+        </p>
+        <p class="text-secondary mb-4">
+          By combining intuitive digital tools with strict privacy controls, we empower individuals and families to navigate their partner search comfortably, transparently, and securely from anywhere in the world.
+        </p>
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <span class="fw-semibold text-dark">Verified Profiles</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <span class="fw-semibold text-dark">Advanced Privacy Control</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <span class="fw-semibold text-dark">All Communities Welcome</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-danger"></i>
+              <span class="fw-semibold text-dark">Dedicated Support Team</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="p-5 bg-light rounded-4 border position-relative">
+          <div class="position-absolute top-0 end-0 translate-middle-y p-4 text-danger opacity-10 display-1">
+            <i class="bi bi-quote"></i>
+          </div>
+          <h3 class="h4 fw-bold mb-3">Our Vision</h3>
+          <p class="text-secondary italic mb-4">
+            "To simplify the search for a life partner by offering a respectful, user-friendly, and secure platform where genuine relationships take root and blossom into lifelong journeys."
+          </p>
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-danger text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+              <i class="bi bi-heart-fill fs-5"></i>
+            </div>
+            <div>
+              <h5 class="mb-0 fw-bold">The Irumanam Team</h5>
+              <small class="text-muted">Dedicated to your happiness</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Goal Section -->
+<section class="py-5 bg-light" id="support-inquiry">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow text-danger fw-bold small text-uppercase">Our Goal & Vision</span>
+      <h2 class="fw-bold">Genuine profiles ready for you — start your new chapter today!</h2>
+      <p class="text-secondary">Why wait? Find your ideal match effortlessly with Irumanam.</p>
+    </div>
+    <div class="row g-4 align-items-center">
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm bg-white p-4 rounded-4 h-100 border-start border-4 border-danger">
+          <div class="text-danger fs-1 mb-3"><i class="bi bi-heart-pulse"></i></div>
+          <h3 class="h5 fw-bold mb-3">Why Wait? Start Your Journey Now</h3>
+          <p class="text-secondary mb-3">
+            Genuine profiles are right here waiting for you. Select a profile that resonates with you and begin your life's journey today. Why wait any longer?
+          </p>
+          <p class="text-secondary mb-0">
+            Irumanam makes it seamless and completely hassle-free to take that wonderful next step forward.
+          </p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card border-0 shadow-sm bg-white p-4 rounded-4 h-100 border-start border-4 border-primary">
+          <div class="text-primary fs-1 mb-3"><i class="bi bi-search-heart"></i></div>
+          <h3 class="h5 fw-bold mb-3">Easy Search & Jathagam Preferences</h3>
+          <p class="text-secondary mb-3">
+            Discover your compatible matches with incredible ease on our platform.
+          </p>
+          <p class="text-secondary mb-0">
+            Search profiles seamlessly tailored to your personal taste as well as traditional <strong>Jathagam (Horoscope)</strong> requirements recommended by your parents.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="bg-white py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow text-danger fw-bold small text-uppercase">Got Questions?</span>
+      <h2 class="fw-bold">Frequently Asked Questions</h2>
+      <p class="text-secondary">Find quick answers to common questions about Irumanam.</p>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="accordion accordion-flush bg-light rounded shadow-sm p-3 border" id="faqAccordion">
+          {% for faq in faqs %}
+          <div class="accordion-item bg-transparent">
+            <h2 class="accordion-header" id="faq{{ faq['id'] }}">
+              <button class="accordion-button fw-semibold text-dark collapsed bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ faq['id'] }}" aria-expanded="false" aria-controls="collapse{{ faq['id'] }}">
+                {{ faq['question'] }}
+              </button>
+            </h2>
+            <div id="collapse{{ faq['id'] }}" class="accordion-collapse collapse" aria-labelledby="faq{{ faq['id'] }}" data-bs-parent="#faqAccordion">
+              <div class="accordion-body text-secondary small">{{ faq['answer'] }}</div>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-secondary mb-0">FAQs will be available soon.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Support/Help Section -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-md-6">
+        <span class="eyebrow text-danger fw-bold small text-uppercase">We're Here To Help</span>
+        <h2 class="fw-bold mt-1">Need assistance or have questions?</h2>
+        <p class="text-secondary">Our dedicated support team is available to assist you with profile setup, privacy controls, or technical assistance.</p>
+        <div class="d-flex flex-column gap-3 mt-4">
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-white p-3 rounded-circle text-danger fs-5 shadow-sm"><i class="bi bi-envelope-at"></i></div>
+            <div>
+              <small class="text-muted d-block">Email Support</small>
+              <a href="mailto:support@irumanam.com" class="fw-semibold text-dark text-decoration-none">support@irumanam.com</a>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="bg-white p-3 rounded-circle text-danger fs-5 shadow-sm"><i class="bi bi-telephone"></i></div>
+            <div>
+              <small class="text-muted d-block">Helpline (Mon-Sat, 9 AM - 6 PM)</small>
+              <a href="tel:+911234567890" class="fw-semibold text-dark text-decoration-none">+91 12345 67890</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm bg-white p-4 rounded-4">
+          <h3 class="h5 fw-bold mb-3">Send Support Inquiry</h3>
+          <form action="{{ url_for('submit_support_inquiry') }}" method="post">
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="supportInquiryName">Your Name</label>
+              <input type="text" class="form-control" id="supportInquiryName" name="name" maxlength="120" placeholder="Enter full name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="supportInquiryEmail">Email Address</label>
+              <input type="email" class="form-control" id="supportInquiryEmail" name="email" maxlength="254" placeholder="name@example.com" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold" for="supportInquiryBody">How can we help?</label>
+              <textarea class="form-control" id="supportInquiryBody" name="body" rows="3" maxlength="1000" placeholder="Describe your issue or question..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-brand w-100">Submit Request</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% include "_support_widget.html" %}
+{% endblock %}

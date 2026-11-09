@@ -1,0 +1,284 @@
+.flash-container {
+  position: fixed;
+  z-index: 1080;
+  top: 92px;
+  right: max(1rem, calc((100vw - 1320px) / 2));
+  display: grid;
+  width: min(440px, calc(100vw - 2rem));
+  gap: .65rem;
+  pointer-events: none;
+}
+
+.app-toast {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+  align-items: start;
+  gap: .7rem;
+  margin: 0;
+  padding: .95rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  box-shadow: 0 14px 38px rgba(29, 22, 38, .16);
+  font-size: .9rem;
+  line-height: 1.5;
+  pointer-events: auto;
+  backdrop-filter: blur(14px);
+}
+
+.app-toast.alert-success {
+  color: #155e47;
+  border-color: #b7e3d2;
+  background: rgba(240, 253, 247, .97);
+}
+
+.app-toast.alert-danger {
+  color: #8d2938;
+  border-color: #f0c2c8;
+  background: rgba(255, 245, 246, .98);
+}
+
+.app-toast.alert-warning {
+  color: #79500d;
+  border-color: #f1d89c;
+  background: rgba(255, 250, 235, .98);
+}
+
+.app-toast.alert-info {
+  color: #285276;
+  border-color: #c4deef;
+  background: rgba(243, 249, 255, .98);
+}
+
+.app-toast-icon {
+  padding-top: .12rem;
+  font-size: 1.05rem;
+}
+
+.app-toast .btn-close {
+  grid-column: 3;
+  grid-row: 1;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  margin: -.25rem -.25rem 0 0;
+  border: 1px solid #d7e3de;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, .72);
+  background-size: .65rem;
+  opacity: .78;
+  transition: background-color .15s ease, border-color .15s ease, opacity .15s ease;
+}
+
+.app-toast .btn-close:hover {
+  border-color: #b7cec3;
+  background-color: #fff;
+  opacity: 1;
+}
+
+.app-toast .btn-close:focus-visible {
+  outline: 3px solid rgba(21, 94, 71, .28);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.login-ad-modal .modal-dialog {
+  width: fit-content;
+  max-width: min(860px, calc(100vw - 2rem));
+}
+
+.login-ad-content {
+  position: relative;
+  overflow: hidden;
+  width: fit-content;
+  max-width: 100%;
+  border: 0;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(24, 16, 29, .3);
+}
+
+.login-ad-close {
+  position: absolute;
+  z-index: 2;
+  top: .8rem;
+  right: .8rem;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 50%;
+  color: #432334;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, .13);
+}
+
+.login-ad-close:hover {
+  color: #fff;
+  background: #72294b;
+}
+
+.login-ad-image-wrap {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  max-height: 68vh;
+  overflow: hidden;
+  background: #f8f3f6;
+}
+
+.login-ad-image-wrap a {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.login-ad-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+}
+
+.login-ad-copy {
+  box-sizing: border-box;
+  padding: 1.25rem 1.5rem 1.4rem;
+}
+
+.login-ad-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: #762b4b;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.login-ad-copy h2 {
+  margin: .4rem 0;
+  color: #241a23;
+  font-size: clamp(1.25rem, 3vw, 1.7rem);
+  font-weight: 800;
+}
+
+.login-ad-copy p {
+  margin: 0 0 1rem;
+  color: #655b66;
+  white-space: pre-line;
+}
+
+.ad-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+  gap: 1.25rem;
+}
+
+.ad-preview-frame {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  overflow: hidden;
+  border: 1px solid #eee4ea;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(63, 37, 53, .08);
+}
+
+.ad-preview-media {
+  display: grid;
+  min-height: 180px;
+  max-height: 420px;
+  place-items: center;
+  overflow: hidden;
+  background: #f8f3f6;
+}
+
+.ad-preview-media img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.ad-preview-copy {
+  padding: 1rem;
+}
+
+.ad-preview-copy h3 {
+  margin: .35rem 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.ad-history-image {
+  width: 76px;
+  height: 54px;
+  border: 1px solid #eadfe6;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.ad-audience-users {
+  min-height: 11rem;
+}
+
+@media (max-width: 767.98px) {
+  .flash-container {
+    top: 76px;
+    right: .75rem;
+    width: calc(100vw - 1.5rem);
+  }
+
+  .app-toast {
+    padding: .8rem .85rem;
+    border-radius: 12px;
+    font-size: .84rem;
+  }
+
+  .login-ad-modal .modal-dialog {
+    width: fit-content;
+    max-width: calc(100vw - 1rem);
+    margin: .5rem;
+  }
+
+  .login-ad-content {
+    border-radius: 16px;
+  }
+
+  .login-ad-image-wrap,
+  .login-ad-image {
+    max-height: 58vh;
+  }
+
+  .login-ad-copy {
+    padding: 1rem 1.1rem 1.15rem;
+  }
+
+  .login-ad-close {
+    top: .55rem;
+    right: .55rem;
+    width: 38px;
+    height: 38px;
+  }
+
+  .ad-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ad-preview-frame {
+    position: static;
+    grid-row: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-ad-modal *,
+  .app-toast {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

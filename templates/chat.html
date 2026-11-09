@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}Chat with {{ other['full_name'] }}{% endblock %}{% block content %}<section class="dashboard-section"><div class="container" style="max-width:720px">
+<h1 class="section-title fs-4"><a href="{{ url_for('view_profile', profile_id=other['id']) }}" class="text-decoration-none">{{ other['full_name'] }}</a></h1>
+<div class="dashboard-card mb-3" style="min-height:300px;max-height:55vh;overflow:auto">{% for m in msgs %}<div class="d-flex {% if m['sender_id']==session['user_id'] %}justify-content-end{% endif %} mb-2"><div class="px-3 py-2 rounded-3 {% if m['sender_id']==session['user_id'] %}bg-danger-subtle{% else %}bg-light{% endif %}" style="max-width:75%">{{ m['body'] }}<div class="text-secondary" style="font-size:.65rem">{{ m['created_at'][:16] }}</div></div></div>{% else %}<p class="text-secondary">Say hello 👋</p>{% endfor %}</div>
+<form method="post" class="d-flex gap-2"><input class="form-control" name="body" maxlength="1000" placeholder="Type a message" required autofocus><button class="btn btn-brand">Send</button></form></div></section>{% endblock %}

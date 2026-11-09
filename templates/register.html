@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+{% block title %}{{ seo_title }}{% endblock %}
+{% block content %}
+<style>
+  .register-section {
+    min-height: 76vh;
+    padding: clamp(32px, 5vw, 64px) 0;
+    background:
+      radial-gradient(ellipse at 10% 12%, rgba(118, 43, 75, .09), transparent 34%),
+      radial-gradient(ellipse at 92% 88%, rgba(198, 154, 80, .1), transparent 31%),
+      #fbf8f8;
+  }
+  .register-heading { max-width: 760px; margin: 0 auto 28px; text-align: center; }
+  .register-heading .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #762b4b;
+    font-size: .75rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .register-heading h1 {
+    margin: 10px 0 8px;
+    color: #33232c;
+    font-size: clamp(1.9rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -.05em;
+  }
+  .register-heading p { margin: 0; color: #746870; }
+  .register-card {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vw, 44px);
+    border: 1px solid #eee3e8;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 24px 70px rgba(58, 34, 47, .1);
+  }
+  .register-card .progress {
+    height: 5px;
+    margin-bottom: 30px !important;
+    border-radius: 10px;
+    background: #f3e9ed;
+  }
+  .register-card .progress-bar {
+    border-radius: 10px;
+    background: linear-gradient(120deg, #762b4b, #b97691);
+  }
+  .register-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 18px;
+    color: #392b34;
+    font-size: 1.08rem;
+    font-weight: 800;
+  }
+  .register-section-heading i {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border-radius: 11px;
+    background: #f8eef2;
+    color: #762b4b;
+    font-size: 1rem;
+  }
+  .register-photo-block {
+    padding: 18px;
+    border: 1px solid #f0e5e9;
+    border-radius: 16px;
+    background: #fdfafb;
+  }
+  .register-photo-copy { min-width: 210px; flex: 1; }
+  .register-photo-copy strong { display: block; color: #443740; font-size: .93rem; }
+  .register-photo-copy .form-text { max-width: 430px; line-height: 1.55; }
+  .register-card .form-label {
+    margin-bottom: 7px;
+    color: #443740;
+    font-size: .85rem;
+    font-weight: 700;
+  }
+  .register-card .form-control,
+  .register-card .form-select {
+    min-height: 50px;
+    border: 1px solid #e8dfe4;
+    border-radius: 11px;
+    background-color: #fff;
+    color: #33232c;
+    font-size: .93rem;
+    box-shadow: none;
+  }
+  .register-card .form-control::placeholder { color: #a99da4; }
+  .register-card .form-control:focus,
+  .register-card .form-select:focus {
+    border-color: #a96781;
+    box-shadow: 0 0 0 4px rgba(118, 43, 75, .1);
+  }
+  .register-card .input-group .form-control {
+    z-index: 1;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .register-card .toggle-password {
+    min-width: 50px;
+    border: 1px solid #e8dfe4;
+    border-left: 0;
+    border-radius: 0 11px 11px 0;
+    background: #fff;
+    color: #766771;
+  }
+  .register-card .toggle-password:hover,
+  .register-card .toggle-password:focus { background: #fbf6f8; color: #762b4b; }
+  .registration-photo-preview {
+    display: flex;
+    width: 112px;
+    height: 140px;
+    flex: 0 0 112px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px dashed #d9b8c5;
+    border-radius: 13px;
+    background: #fff;
+    color: #9c657c;
+    font-size: 2rem;
+  }
+  .registration-photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  #registerCropArea { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0e5e9; }
+  .register-crop-container {
+    max-width: 420px;
+    max-height: 420px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f8f6f7;
+  }
+  .register-crop-container img { display: block; max-width: 100%; }
+  .register-crop-actions .btn { border-radius: 9px; }
+  .register-card .form-check-input:checked {
+    border-color: #762b4b;
+    background-color: #762b4b;
+  }
+  .register-submit {
+    min-height: 52px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(120deg, #762b4b, #914260);
+    color: #fff;
+    font-size: .98rem;
+    font-weight: 750;
+    box-shadow: 0 8px 20px rgba(118, 43, 75, .2);
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .register-submit:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(120deg, #591d37, #762b4b);
+    color: #fff;
+    box-shadow: 0 11px 24px rgba(118, 43, 75, .25);
+  }
+  .register-submit:focus-visible,
+  .register-card .toggle-password:focus-visible,
+  .register-card a:focus-visible {
+    outline: 3px solid rgba(198, 154, 80, .65);
+    outline-offset: 3px;
+  }
+  .register-card .auth-switch { margin: 22px 0 0; color: #746870; text-align: center; }
+  .register-card .auth-switch a { color: #762b4b; font-weight: 750; text-decoration: none; }
+  .register-card .auth-switch a:hover { text-decoration: underline; }
+  .register-security-note {
+    margin: 17px 0 0;
+    color: #81747d;
+    font-size: .8rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+  @media (max-width: 575.98px) {
+    .register-section { padding: 30px 0 42px; }
+    .register-heading { margin-bottom: 20px; }
+    .register-card { padding: 23px 18px; border-radius: 20px; }
+    .register-card .progress { margin-bottom: 23px !important; }
+    .register-photo-block { padding: 14px; }
+    .registration-photo-preview { width: 94px; height: 118px; flex-basis: 94px; }
+    .register-photo-copy { min-width: 150px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .register-submit { transition: none; }
+    .register-submit:hover { transform: none; }
+  }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+
+<section class="auth-section register-section">
+  <div class="container">
+    <div class="register-heading">
+      <span class="eyebrow"><i class="bi bi-heart-fill" aria-hidden="true"></i> Your next chapter starts here</span>
+      <h1>Create your Irumanam profile</h1>
+      <p>Share a few details to get started. You can complete the rest of your profile later.</p>
+    </div>
+    <div class="auth-card register-card">
+      <div class="progress mb-4" role="progressbar" aria-label="Registration progress" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" style="width:100%"></div>
+      </div>
+      <form method="post" id="registerForm" enctype="multipart/form-data" novalidate>
+        <div class="row g-3">
+          <div class="col-12">
+            <h2 class="register-section-heading"><i class="bi bi-person-vcard" aria-hidden="true"></i> Your profile</h2>
+            <div class="register-photo-block">
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <div class="registration-photo-preview" id="registrationPhotoPreview" aria-live="polite">
+                  <i class="bi bi-person" aria-hidden="true"></i>
+                </div>
+                <div class="register-photo-copy">
+                  <strong>Profile photo <span class="text-danger">*</span></strong>
+                  <div class="form-text mb-2">Choose a JPG, PNG, or WebP photo (up to 3 MB), adjust it, then save.</div>
+                  <label class="btn btn-outline-secondary btn-sm mb-0" for="registrationPhoto">
+                    <i class="bi bi-upload me-1" aria-hidden="true"></i> Browse photo
+                  </label>
+                  <input class="visually-hidden" type="file" id="registrationPhoto" accept="image/jpeg,image/png,image/webp" aria-describedby="registerPhotoHelp">
+                  <span class="visually-hidden" id="registerPhotoHelp">Choose a JPG, PNG, or WebP photo up to 3 MB, then adjust and save it.</span>
+                </div>
+              </div>
+              <input type="hidden" name="cropped_photo" id="registrationCroppedPhoto">
+              <div id="registerPhotoError" class="small text-danger mt-2" role="alert"></div>
+              <div id="registerCropArea">
+                <p class="form-text mb-2">Drag to adjust the photo and use the zoom buttons to frame it.</p>
+                <div class="register-crop-container">
+                  <img id="registrationCropImage" src="" alt="Adjust your profile photo">
+                </div>
+                <div class="register-crop-actions d-flex gap-2 flex-wrap mt-2">
+                  <button class="btn btn-sm btn-outline-secondary" type="button" id="registerZoomIn"><i class="bi bi-zoom-in" aria-hidden="true"></i> Zoom in</button>
+                  <button class="btn btn-sm btn-outline-secondary" type="button" id="registerZoomOut"><i class="bi bi-zoom-out" aria-hidden="true"></i> Zoom out</button>
+                  <button class="btn btn-sm btn-success" type="button" id="registerSavePhoto"><i class="bi bi-check-lg" aria-hidden="true"></i> Save photo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="full_name">Full name <span class="text-danger">*</span></label>
+            <input class="form-control" id="full_name" name="full_name" value="{{ form.get('full_name','') }}" autocomplete="name" required minlength="2" maxlength="100" placeholder="Enter your full name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="gender">Profile you are creating <span class="text-danger">*</span></label>
+            <select class="form-select" id="gender" name="gender" required>
+              <option value="">Select</option>
+              <option value="Bride" {% if form.get('gender') == 'Bride' %}selected{% endif %}>Bride</option>
+              <option value="Groom" {% if form.get('gender') == 'Groom' %}selected{% endif %}>Groom</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="profile_created_by">Profile created by <span class="text-danger">*</span></label>
+            <select class="form-select" id="profile_created_by" name="profile_created_by" required>
+              {% for x in ['Self','Parent','Sibling','Relative','Friend'] %}
+                <option value="{{ x }}" {% if form.get('profile_created_by','Self') == x %}selected{% endif %}>{{ x }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="date_of_birth">Date of birth <span class="text-danger">*</span></label>
+            <input class="form-control" id="date_of_birth" name="date_of_birth" type="date" max="{{ '' }}" value="{{ form.get('date_of_birth','') }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="mobile">Mobile number <span class="text-danger">*</span></label>
+            <input class="form-control" id="mobile" name="mobile" type="tel" autocomplete="tel" value="{{ form.get('mobile','') }}" required placeholder="10-digit mobile number" pattern="^\+?[0-9]{10,15}$">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="email">Email address <span class="text-danger">*</span></label>
+            <input class="form-control" id="email" name="email" type="email" autocomplete="email" value="{{ form.get('email','') }}" required maxlength="254" placeholder="you@example.com">
+          </div>
+          <div class="col-12 mt-4">
+            <h2 class="register-section-heading"><i class="bi bi-shield-lock" aria-hidden="true"></i> Secure your account</h2>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="password">Password <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input class="form-control password-field" id="password" name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="At least 8 characters">
+              <button class="btn toggle-password" type="button" data-target="password" aria-label="Show password"><i class="bi bi-eye" aria-hidden="true"></i></button>
+            </div>
+            <div class="form-text text-muted small">Use at least 8 characters.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="confirm_password">Confirm password <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input class="form-control password-field" id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required minlength="8" placeholder="Re-enter password">
+              <button class="btn toggle-password" type="button" data-target="confirm_password" aria-label="Show password"><i class="bi bi-eye" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="terms" required>
+              <label class="form-check-label small text-secondary" for="terms">I confirm that I am at least 18 years old and agree to use this demo responsibly.</label>
+            </div>
+          </div>
+          <div class="col-12 mt-4">
+            <button class="btn register-submit btn-lg w-100" type="submit">Create my profile <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </form>
+      <p class="auth-switch">Already a member? <a href="{{ url_for('login') }}">Log in</a></p>
+      <p class="register-security-note"><i class="bi bi-shield-check me-1 text-success" aria-hidden="true"></i>Open to all communities and backgrounds. Your password is stored securely.</p>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+  (() => {
+    const photoInput = document.getElementById("registrationPhoto");
+    const cropImage = document.getElementById("registrationCropImage");
+    const cropArea = document.getElementById("registerCropArea");
+    const preview = document.getElementById("registrationPhotoPreview");
+    const croppedPhoto = document.getElementById("registrationCroppedPhoto");
+    const photoError = document.getElementById("registerPhotoError");
+    let cropper;
+
+    photoInput.addEventListener("change", () => {
+      const file = photoInput.files && photoInput.files[0];
+      if (cropper) {
+        cropper.destroy();
+        cropper = undefined;
+      }
+      croppedPhoto.value = "";
+      photoError.textContent = "";
+      preview.innerHTML = '<i class="bi bi-person"></i>';
+      cropArea.style.display = "none";
+      cropImage.src = "";
+      if (!file) return;
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size === 0 || file.size > 3 * 1024 * 1024) {
+        photoInput.value = "";
+        photoError.textContent = "Choose a JPG, PNG, or WebP photo up to 3 MB.";
+        return;
+      }
+      if (typeof Cropper === "undefined") {
+        photoError.textContent = "Photo adjustment is unavailable. Please reload the page and try again.";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        cropImage.src = reader.result;
+        cropArea.style.display = "block";
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 4 / 5,
+          viewMode: 1,
+          autoCropArea: 0.8,
+          background: false
+        });
+      };
+      reader.onerror = () => {
+        photoError.textContent = "The selected photo could not be read. Please choose another image.";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("registerZoomIn").addEventListener("click", () => {
+      if (cropper) cropper.zoom(0.1);
+    });
+    document.getElementById("registerZoomOut").addEventListener("click", () => {
+      if (cropper) cropper.zoom(-0.1);
+    });
+    document.getElementById("registerSavePhoto").addEventListener("click", () => {
+      if (!cropper) return;
+      const canvas = cropper.getCroppedCanvas({
+        width: 800,
+        height: 1000,
+        imageSmoothingQuality: "high"
+      });
+      if (!canvas) {
+        photoError.textContent = "The photo could not be adjusted. Please choose another image.";
+        return;
+      }
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      preview.innerHTML = "";
+      const image = document.createElement("img");
+      image.src = dataUrl;
+      image.alt = "Saved profile photo preview";
+      preview.appendChild(image);
+      croppedPhoto.value = dataUrl;
+      cropArea.style.display = "none";
+      photoError.textContent = "";
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", (event) => {
+      if (!croppedPhoto.value) {
+        event.preventDefault();
+        photoError.textContent = "Please browse, adjust, and save your profile photo before continuing.";
+        photoInput.focus();
+      }
+    });
+  })();
+</script>
+{% endblock %}

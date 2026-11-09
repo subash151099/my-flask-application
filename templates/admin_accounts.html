@@ -1,0 +1,60 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin Accounts | Irumanam{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div><span class="admin-kicker"><i class="bi bi-person-gear"></i> Security &amp; access</span><h1>Administrator accounts</h1><p>Create staff accounts, assign page permissions, and manage access. Existing records are retained when access is removed.</p></div>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin_activity') }}"><i class="bi bi-clock-history me-1"></i> View activity</a>
+  </div>
+
+  <section class="admin-surface admin-faq-editor mb-4">
+    <div class="admin-section-heading"><span class="admin-section-icon"><i class="bi bi-person-plus"></i></span><div><h2>Add administrator</h2><p>Passwords must be at least 12 characters. Grant only the permissions needed for the role.</p></div></div>
+    <form method="post" action="{{ url_for('admin_accounts') }}" class="row g-3">
+      <div class="col-12 col-md-6"><label class="form-label" for="new-admin-name">Full name</label><input class="form-control" id="new-admin-name" name="full_name" maxlength="120" required></div>
+      <div class="col-12 col-md-6"><label class="form-label" for="new-admin-email">Email</label><input class="form-control" id="new-admin-email" type="email" name="email" maxlength="254" required></div>
+      <div class="col-12 col-md-6"><label class="form-label" for="new-admin-mobile">Mobile</label><input class="form-control" id="new-admin-mobile" name="mobile" inputmode="tel" required></div>
+      <div class="col-12 col-md-6"><label class="form-label" for="new-admin-password">Temporary password</label><input class="form-control" id="new-admin-password" type="password" name="password" minlength="12" autocomplete="new-password" required></div>
+      <div class="col-12 col-md-6"><label class="form-label" for="new-admin-role">Role</label><select class="form-select" id="new-admin-role" name="admin_role"><option value="ADMIN">Admin</option><option value="SUPER_ADMIN">Super Admin</option></select></div>
+      <fieldset class="col-12"><legend class="form-label mb-2">Admin permissions</legend><div class="admin-permission-grid">
+        {% for key, label in permissions.items() %}<label class="admin-permission-option"><input class="form-check-input" type="checkbox" name="permissions" value="{{ key }}" {% if key == 'dashboard' %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}
+      </div></fieldset>
+      <div class="col-12 text-end"><button class="btn btn-brand" type="submit"><i class="bi bi-person-plus me-1"></i> Create account</button></div>
+    </form>
+  </section>
+
+  <div class="admin-content-heading"><div><h2>Admin team</h2><p>{{ admins|length }} administrator account{{ '' if admins|length == 1 else 's' }}</p></div></div>
+  <div class="admin-admin-list">
+    {% for admin in admins %}
+    <article class="admin-surface admin-admin-card">
+      <div class="admin-admin-card-head">
+        <span class="admin-admin-avatar"><i class="bi bi-person-fill-gear"></i></span>
+        <div class="admin-admin-identity"><h3>{{ admin['full_name'] }}</h3><span>{{ admin['email'] }} · {{ admin['mobile'] }}</span><small>Added {{ admin['created_at'] }}</small></div>
+        <div class="admin-admin-badges"><span class="badge {{ 'bg-dark' if admin['admin_role']=='SUPER_ADMIN' else 'bg-primary' }}">{{ admin['admin_role'].replace('_', ' ')|title }}</span><span class="badge {{ 'bg-success' if admin['admin_active'] else 'bg-secondary' }}">{{ 'Active' if admin['admin_active'] else 'Inactive' }}</span></div>
+      </div>
+      <details class="admin-admin-edit">
+        <summary><i class="bi bi-pencil-square me-1"></i> Edit account and permissions</summary>
+        <form method="post" action="{{ url_for('admin_accounts') }}" class="row g-3 pt-3">
+          <input type="hidden" name="admin_id" value="{{ admin['id'] }}">
+          <input type="hidden" name="active" value="{{ admin['admin_active'] }}">
+          <div class="col-12 col-md-6"><label class="form-label" for="admin-name-{{ admin['id'] }}">Full name</label><input class="form-control" id="admin-name-{{ admin['id'] }}" name="full_name" value="{{ admin['full_name'] }}" maxlength="120" required></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="admin-email-{{ admin['id'] }}">Email</label><input class="form-control" id="admin-email-{{ admin['id'] }}" type="email" name="email" value="{{ admin['email'] }}" maxlength="254" required></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="admin-mobile-{{ admin['id'] }}">Mobile</label><input class="form-control" id="admin-mobile-{{ admin['id'] }}" name="mobile" value="{{ admin['mobile'] }}" required></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="admin-password-{{ admin['id'] }}">New password <small class="text-secondary">(optional, 12+ characters)</small></label><input class="form-control" id="admin-password-{{ admin['id'] }}" type="password" name="password" minlength="12" autocomplete="new-password"></div>
+          <div class="col-12 col-md-6"><label class="form-label" for="admin-role-{{ admin['id'] }}">Role</label><select class="form-select" id="admin-role-{{ admin['id'] }}" name="admin_role"><option value="ADMIN" {% if admin['admin_role']=='ADMIN' %}selected{% endif %}>Admin</option><option value="SUPER_ADMIN" {% if admin['admin_role']=='SUPER_ADMIN' %}selected{% endif %}>Super Admin</option></select></div>
+          <fieldset class="col-12"><legend class="form-label mb-2">Admin permissions</legend><div class="admin-permission-grid">
+            {% for key, label in permissions.items() %}<label class="admin-permission-option"><input class="form-check-input" type="checkbox" name="permissions" value="{{ key }}" {% if key in (admin['admin_permissions'] or '').split(',') %}checked{% endif %}><span>{{ label }}</span></label>{% endfor %}
+          </div></fieldset>
+          <div class="col-12"><button class="btn btn-brand" type="submit"><i class="bi bi-check2 me-1"></i> Save account</button></div>
+        </form>
+      </details>
+      {% if admin['id'] != logged_in_user['id'] %}
+      <div class="admin-admin-actions">
+        <form id="admin-toggle-{{ admin['id'] }}" method="post" action="{{ url_for('admin_account_action', admin_id=admin['id']) }}"><input type="hidden" name="action" value="{{ 'deactivate' if admin['admin_active'] else 'activate' }}"><button class="btn btn-sm btn-outline-secondary" type="submit">{{ 'Deactivate' if admin['admin_active'] else 'Activate' }}</button></form>
+        <form id="admin-delete-{{ admin['id'] }}" method="post" action="{{ url_for('admin_account_action', admin_id=admin['id']) }}"><input type="hidden" name="action" value="delete"><button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Remove this administrator’s access? The user record will be retained.')"><i class="bi bi-person-x me-1"></i> Remove access</button></form>
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

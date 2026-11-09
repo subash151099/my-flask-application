@@ -1,0 +1,61 @@
+{% extends "admin_base.html" %}
+{% block title %}Support Conversation #{{ conversation['id'] }} | Admin{% endblock %}
+{% block content %}
+<div class="admin-page admin-support-page">
+  <div class="admin-page-heading">
+    <div><span class="admin-kicker"><i class="bi bi-headset"></i> Live support conversation</span><h1>{{ conversation['visitor_name'] }}</h1><p>Conversation #{{ conversation['id'] }} · Started {{ conversation['created_at'] }}{% if conversation['visitor_email'] %} · {{ conversation['visitor_email'] }}{% endif %}</p></div>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin_support') }}"><i class="bi bi-arrow-left me-1"></i> All conversations</a>
+  </div>
+  <section class="admin-surface admin-support-chat">
+    <header class="admin-support-chat-head"><div><b>{{ conversation['visitor_name'] }}</b><small>Visitor support chat · <span class="{{ 'text-success' if conversation['status']=='OPEN' else 'text-secondary' }}">{{ conversation['status'] }}</span></small></div>
+      <form method="post"><input type="hidden" name="action" value="{{ 'close' if conversation['status']=='OPEN' else 'reopen' }}"><button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-{{ 'check2-circle' if conversation['status']=='OPEN' else 'arrow-repeat' }} me-1"></i>{{ 'Close conversation' if conversation['status']=='OPEN' else 'Reopen conversation' }}</button></form>
+    </header>
+    <div class="admin-support-chat-messages" id="supportAdminMessages" data-poll-url="{{ url_for('admin_support_messages', conversation_id=conversation['id']) }}">
+      {% for message in messages %}
+      <div class="admin-support-message {{ 'from-automated' if message['is_automated'] else ('from-admin' if message['sender_role']=='admin' else 'from-visitor') }}" data-message-id="{{ message['id'] }}"><span>{{ message['body'] }}</span><small>{{ 'Auto-reply' if message['is_automated'] else ((message['admin_name'] or 'Admin') if message['sender_role']=='admin' else 'Visitor') }} · {{ message['created_at'] }}{% if message['sender_role']=='visitor' %} · {{ 'Read' if message['is_read'] else 'Unread' }}{% endif %}</small></div>
+      {% else %}
+      <p class="text-secondary text-center my-auto">Send a reply to start the conversation.</p>
+      {% endfor %}
+    </div>
+    <form method="post" class="admin-support-reply">
+      <input type="hidden" name="action" value="reply">
+      <label class="visually-hidden" for="support-reply">Reply to visitor</label>
+      <textarea class="form-control" id="support-reply" name="body" rows="2" maxlength="1000" placeholder="Write a reply..." required></textarea>
+      <button class="btn btn-brand" type="submit"><i class="bi bi-send me-1"></i> Send reply</button>
+    </form>
+  </section>
+</div>
+<script>
+(() => {
+  const list = document.getElementById("supportAdminMessages");
+  if (!list) return;
+  const url = list.dataset.pollUrl;
+  let latestId = Math.max(0, ...Array.from(list.querySelectorAll("[data-message-id]"), (node) => Number(node.dataset.messageId)));
+  const addMessage = (message) => {
+    if (message.id <= latestId) return;
+    const bubble = document.createElement("div");
+    bubble.className = "admin-support-message " + (message.is_automated ? "from-automated" : (message.sender_role === "admin" ? "from-admin" : "from-visitor"));
+    const body = document.createElement("span");
+    body.textContent = message.body;
+    const meta = document.createElement("small");
+    meta.textContent = (message.is_automated ? "Auto-reply" : (message.sender_role === "admin" ? (message.admin_name || "Admin") : "Visitor")) + " · " + message.created_at + (message.sender_role === "visitor" ? " · Read" : "");
+    bubble.append(body, meta);
+    list.appendChild(bubble);
+    latestId = message.id;
+    list.scrollTop = list.scrollHeight;
+  };
+  const poll = async () => {
+    try {
+      const response = await fetch(url + "?after=" + latestId, { headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("Unable to refresh this conversation.");
+      const data = await response.json();
+      data.messages.forEach(addMessage);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  list.scrollTop = list.scrollHeight;
+  window.setInterval(poll, 2500);
+})();
+</script>
+{% endblock %}

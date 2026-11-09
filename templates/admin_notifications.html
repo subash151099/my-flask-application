@@ -1,0 +1,21 @@
+{% extends "admin_base.html" %}
+{% block title %}Activity Notifications | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div><span class="admin-kicker"><i class="bi bi-bell"></i> Activity center</span><h1>Admin notifications</h1><p>Important registrations, payments, support messages, and member activity.</p></div>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
+  </div>
+  <section class="admin-surface admin-notification-list">
+    {% for item in items %}
+    <a class="admin-activity-row" href="{{ url_for('admin_open_notification', notification_id=item['id']) }}">
+      <span class="admin-activity-icon"><i class="bi {% if item['event_type'] == 'support_message' %}bi-headset{% elif 'payment' in item['event_type'] %}bi-credit-card{% elif 'registration' in item['event_type'] %}bi-person-plus{% else %}bi-activity{% endif %}"></i></span>
+      <span class="admin-activity-copy"><b>{{ item['title'] }}</b><span>{{ item['body'] }}</span><small>{{ item['created_at'] }} · {{ item['event_type'].replace('_', ' ')|title }}</small></span>
+      <i class="bi bi-arrow-up-right admin-activity-arrow"></i>
+    </a>
+    {% else %}
+    <div class="admin-empty-state"><i class="bi bi-bell-slash"></i><b>No notifications yet</b><span>Important platform activity will appear here.</span></div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

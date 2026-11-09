@@ -1,0 +1,62 @@
+{% extends "admin_base.html" %}
+{% block title %}Support Auto-replies | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-chat-square-text"></i> Member care</span>
+      <h1>Support auto-replies</h1>
+      <p>Messages containing a key (case-insensitive) receive its reply automatically. Other messages are sent to the support inbox for manual follow-up.</p>
+    </div>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin_support') }}"><i class="bi bi-arrow-left me-1"></i> Support inbox</a>
+  </div>
+
+  <details class="admin-surface admin-faq-editor admin-auto-reply-add">
+    <summary class="admin-auto-reply-add-toggle"><span class="admin-section-icon"><i class="bi bi-plus-lg"></i></span><span><b>Add an auto-reply</b><small>Create a key and the reply visitors receive when it matches.</small></span><i class="bi bi-chevron-down"></i></summary>
+    <div class="admin-section-heading">
+      <div><h2>New key and reply</h2><p>Choose a word or phrase visitors are likely to include.</p></div>
+    </div>
+    <form method="post" action="{{ url_for('admin_support_auto_replies') }}" class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="new-keyword">Key</label>
+        <input class="form-control" id="new-keyword" name="keyword" maxlength="100" required>
+      </div>
+      <div class="col-12 col-md-8">
+        <label class="form-label" for="new-reply">Reply</label>
+        <textarea class="form-control" id="new-reply" name="reply" rows="3" maxlength="1000" required></textarea>
+      </div>
+      <div class="col-12 text-end"><button class="btn btn-brand" type="submit"><i class="bi bi-plus-circle me-1"></i> Add auto-reply</button></div>
+    </form>
+  </details>
+
+  <div class="admin-content-heading"><div><h2>Saved keys and replies</h2><p>{{ items|length }} auto-repl{{ 'y' if items|length == 1 else 'ies' }}</p></div></div>
+  <div class="admin-auto-reply-list">
+    {% for item in items %}
+    <article class="admin-surface admin-auto-reply-card">
+      <div class="admin-auto-reply-card-head">
+        <span class="admin-auto-reply-check"><i class="bi bi-check2"></i></span>
+        <div class="admin-auto-reply-card-title"><h3>{{ item['keyword'] }}</h3><small>Updated {{ item['updated_at'] }}</small></div>
+        <span class="admin-auto-reply-status"><i class="bi bi-lightning-charge"></i> Active</span>
+      </div>
+      <div class="admin-auto-reply-preview"><span>Automatic reply</span><p>{{ item['reply'] }}</p></div>
+      <div class="admin-auto-reply-actions">
+        <details class="admin-auto-reply-edit">
+          <summary class="btn btn-sm btn-outline-dark"><i class="bi bi-pencil-square me-1"></i> Edit</summary>
+          <form method="post" action="{{ url_for('admin_support_auto_replies') }}" class="admin-auto-reply-edit-form">
+            <input type="hidden" name="reply_id" value="{{ item['id'] }}">
+            <div><label class="form-label" for="keyword-{{ item['id'] }}">Key</label><input class="form-control" id="keyword-{{ item['id'] }}" name="keyword" value="{{ item['keyword'] }}" maxlength="100" required></div>
+            <div><label class="form-label" for="reply-{{ item['id'] }}">Reply</label><textarea class="form-control" id="reply-{{ item['id'] }}" name="reply" rows="3" maxlength="1000" required>{{ item['reply'] }}</textarea></div>
+            <div class="d-flex justify-content-end"><button class="btn btn-brand" type="submit"><i class="bi bi-check2 me-1"></i> Save changes</button></div>
+          </form>
+        </details>
+        <form method="post" action="{{ url_for('admin_support_auto_reply_delete', reply_id=item['id']) }}" onsubmit="return confirm('Delete this support auto-reply?')">
+          <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash me-1"></i> Delete</button>
+        </form>
+      </div>
+    </article>
+    {% else %}
+    <div class="admin-surface p-4 text-secondary">No auto-replies are saved yet. Until you add a key, support messages will be sent to the admin inbox.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

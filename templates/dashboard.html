@@ -1,0 +1,17 @@
+{% extends "base.html" %}{% from "_macros.html" import avatar with context %}
+{% block title %}Home | Irumanam{% endblock %}{% block content %}<div class="wrap">{% include "_tabs.html" %}
+<section class="hello"><div><h1>Vanakkam, {{ user['full_name'].split(' ')[0] }} 👋</h1><p>Here's what's happening on your profile today.</p></div><a class="btn-or" href="{{ url_for('matches') }}"><i class="bi bi-people"></i> View my matches</a></section>
+<div class="stats">{% for v,l,i,u in [(stats.pending,'Pending interests','person-heart',url_for('interests', status='pending')),(stats.views,'Profile views','eye',url_for('viewers')),(unread_count,'Unread messages','chat-dots',url_for('messages_inbox')),(stats.shortlisted,'Shortlisted you','bookmark-heart',url_for('viewers'))] %}<a class="stat" href="{{ u }}"><i class="bi bi-{{ i }}"></i><b>{{ v }}</b><span>{{ l }}</span></a>{% endfor %}</div>
+<div class="home"><aside class="pcard"><a class="bigav" href="{{ url_for('edit_profile') }}">{{ avatar(user) }}<i class="bi bi-camera-fill"></i></a><h2>{{ user['full_name'] }}</h2><div class="mid">{{ user['matrimony_id'] }}</div><div class="membership-status">{% if premium %}<span class="membership-badge membership-badge-{{ user['plan']|lower }}"><i class="bi bi-stars"></i> {{ user['plan']|title }} Premium</span><small>Active until {{ user['plan_until'] }}</small>{% else %}<span class="membership-badge membership-badge-free">Free member</span>{% endif %}</div>
+<a class="pill big mt-3" href="{{ url_for('view_profile', profile_id=user['id']) }}">View my profile</a>
+{% if not premium %}<div class="upg home-upgrade">
+<div class="home-upgrade-icon"><i class="bi bi-stars"></i></div>
+<span class="home-upgrade-label">Unlock more with Premium</span>
+<h3>Make the connection</h3>
+<p>Call and message your matches directly with a Premium membership.</p>
+<a class="btn-or home-upgrade-button" href="{{ url_for('premium_page') }}">Upgrade membership <i class="bi bi-arrow-right"></i></a>
+</div>{% endif %}</aside>
+<section><div class="complete"><h2>Complete Your Profile</h2><p>Profile completeness score <b>{{ percent }}%</b> <span class="bar"><i style="width:{{ percent }}%"></i></span></p>
+<div class="tiles"><a href="{{ url_for('edit_profile') }}#photo"><i class="bi bi-camera"></i> Add Photo</a><a href="{{ url_for('edit_profile') }}#horo"><i class="bi bi-stars"></i> Add Horoscope</a><a href="{{ url_for('preferences') }}"><i class="bi bi-sliders"></i> Partner Preferences</a></div></div>
+<div class="d-flex justify-content-between align-items-end mt-4"><div><h2>Daily Recommendations</h2><p class="text-secondary mb-2">Recommended matches for today</p></div><a class="seemore" href="{{ url_for('matches') }}">See all <i class="bi bi-arrow-right"></i></a></div>
+<div class="recs">{% for p in recs %}<a class="rec" href="{{ url_for('view_profile', profile_id=p['id']) }}">{{ avatar(p) }}<b>{{ p['full_name'] }}</b><small>{{ calculate_age(p['date_of_birth']) }} yrs{% if p['city'] %} · {{ p['city'] }}{% endif %}</small></a>{% else %}<p class="text-secondary">No recommendations yet.</p>{% endfor %}</div></section></div></div>{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "admin_base.html" %}
+{% block title %}Reports | Irumanam Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div><span class="admin-kicker"><i class="bi bi-bar-chart-line"></i> Data &amp; insights</span><h1>Reports</h1><p>Filter support messages, automated and staff replies, saved keys, administrator sign-ins, and audit activity.</p></div>
+    <a class="btn btn-brand" href="{{ url_for('admin_reports_export', **filters) }}"><i class="bi bi-file-earmark-excel me-1"></i> Export filtered report</a>
+  </div>
+
+  <form method="get" action="{{ url_for('admin_reports') }}" class="admin-toolbar row g-2 align-items-end mb-4">
+    <div class="col-12 col-lg-3"><label class="form-label" for="report-search">Search</label><input class="form-control" id="report-search" name="q" value="{{ filters.q }}" placeholder="Message, admin, endpoint..."></div>
+    <div class="col-12 col-md-6 col-lg-3"><label class="form-label" for="report-user">User name or email</label><input class="form-control" id="report-user" name="user" value="{{ filters.user }}" placeholder="Search support contacts"></div>
+    <div class="col-12 col-md-6 col-lg-3"><label class="form-label" for="report-admin">Administrator</label><select class="form-select" id="report-admin" name="admin_id"><option value="">All admins</option>{% for admin in report['admins'] %}<option value="{{ admin['id'] }}" {% if filters.admin_id == admin['id']|string %}selected{% endif %}>{{ admin['full_name'] }}</option>{% endfor %}</select></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-from">From date</label><input class="form-control" id="report-from" type="date" name="from_date" value="{{ filters.from_date }}"></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-to">To date</label><input class="form-control" id="report-to" type="date" name="to_date" value="{{ filters.to_date }}"></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-message-type">Message type</label><select class="form-select" id="report-message-type" name="message_type"><option value="">All message types</option><option value="user" {% if filters.message_type=='user' %}selected{% endif %}>User messages</option><option value="auto" {% if filters.message_type=='auto' %}selected{% endif %}>Automatic replies</option><option value="admin" {% if filters.message_type=='admin' %}selected{% endif %}>Admin replies</option></select></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-status">Status</label><select class="form-select" id="report-status" name="status"><option value="">All statuses</option><option value="OPEN" {% if filters.status=='OPEN' %}selected{% endif %}>Conversation open</option><option value="CLOSED" {% if filters.status=='CLOSED' %}selected{% endif %}>Conversation closed</option><option value="READ" {% if filters.status=='READ' %}selected{% endif %}>Read</option><option value="UNREAD" {% if filters.status=='UNREAD' %}selected{% endif %}>Unread</option></select></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-role">Role</label><select class="form-select" id="report-role" name="role"><option value="">All roles</option><option value="USER" {% if filters.role=='USER' %}selected{% endif %}>User</option><option value="ADMIN" {% if filters.role=='ADMIN' %}selected{% endif %}>Admin</option><option value="SUPER_ADMIN" {% if filters.role=='SUPER_ADMIN' %}selected{% endif %}>Super Admin</option></select></div>
+    <div class="col-6 col-md-3 col-lg-3"><label class="form-label" for="report-activity">Activity type</label><select class="form-select" id="report-activity" name="activity_type"><option value="">All actions</option>{% for action in report['activity_types'] %}<option value="{{ action }}" {% if filters.activity_type==action %}selected{% endif %}>{{ action }}</option>{% endfor %}</select></div>
+    <div class="col-12 d-flex flex-wrap gap-2"><button class="btn btn-brand" type="submit"><i class="bi bi-funnel me-1"></i> Apply filters</button><a class="btn btn-outline-secondary" href="{{ url_for('admin_reports') }}">Reset filters</a></div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    {% for title, count, icon in [('User messages', report['messages']|selectattr('sender_role','equalto','visitor')|list|length, 'chat-left-text'), ('Automatic replies', report['messages']|selectattr('is_automated')|list|length, 'lightning-charge'), ('Admin replies', report['messages']|selectattr('sender_role','equalto','admin')|list|length, 'reply'), ('Keys', report['keys']|length, 'key'), ('Admin logins', report['logins']|length, 'shield-lock'), ('Admin activities', report['activity']|length, 'activity')] %}
+    <div class="col-6 col-xl-2"><div class="admin-report-stat"><span class="ico"><i class="bi bi-{{ icon }}"></i></span><span><b>{{ count }}</b><small>{{ title }}</small></span></div></div>
+    {% endfor %}
+  </div>
+
+  <section class="admin-surface admin-table-wrap admin-report-messages mb-4">
+    <div class="admin-section-heading p-3 pb-0">
+      <span class="admin-section-icon"><i class="bi bi-chat-dots"></i></span>
+      <div><h2>Support message report</h2><p id="support-report-count">{{ report['messages']|length }} matching message records</p></div>
+    </div>
+    <div class="admin-report-message-controls">
+      <div class="admin-report-message-summary" aria-label="Support message summary">
+        <button class="admin-report-message-ribbon total is-active" type="button" data-message-filter="all" aria-pressed="true"><i class="bi bi-chat-left-text"></i><b>{{ report['messages']|length }}</b><small>Total messages</small></button>
+        <button class="admin-report-message-ribbon read" type="button" data-message-filter="read" aria-pressed="false"><i class="bi bi-envelope-open"></i><b>{{ report['messages']|selectattr('sender_role', 'equalto', 'visitor')|selectattr('is_read')|list|length }}</b><small>Read messages</small></button>
+        <button class="admin-report-message-ribbon unread" type="button" data-message-filter="unread" aria-pressed="false"><i class="bi bi-envelope-exclamation"></i><b>{{ report['messages']|selectattr('sender_role', 'equalto', 'visitor')|selectattr('is_read', 'equalto', 0)|list|length }}</b><small>Unread messages</small></button>
+      </div>
+      <div class="admin-report-message-tools">
+        <label class="input-group">
+          <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+          <input class="form-control" id="support-report-search" type="search" placeholder="Search these messages..." aria-label="Search support message report">
+        </label>
+      </div>
+    </div>
+    {% if can_admin('support') %}
+    <form method="post" action="{{ url_for('admin_reports_delete', **filters) }}" id="support-report-delete-form" onsubmit="return confirm('Delete the selected support message(s)? This cannot be undone. Conversations will be kept.');">
+      {% for key, value in filters.items() %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+      <div class="admin-report-bulk-actions">
+        <label class="form-check-label d-flex align-items-center gap-2"><input class="form-check-input m-0" type="checkbox" id="support-report-select-visible"><span>Select visible</span></label>
+        <span class="admin-report-selected-count" id="support-report-selected-count">0 selected</span>
+        <button class="btn btn-sm btn-outline-danger" id="support-report-delete-button" type="submit" disabled><i class="bi bi-trash me-1"></i> Delete selected</button>
+      </div>
+    {% endif %}
+    <div class="table-responsive admin-report-message-scroll" id="support-report-scroll">
+      <table class="table table-hover align-middle mb-0 adm-table">
+        <thead><tr>{% if can_admin('support') %}<th><span class="visually-hidden">Select</span></th>{% endif %}<th>Date</th><th>User</th><th>Type</th><th>Administrator</th><th>Status</th><th>Message</th></tr></thead>
+        <tbody>
+          {% for row in report['messages'] %}
+          <tr data-support-report-row data-sender-role="{{ row['sender_role'] }}" data-is-read="{{ row['is_read'] }}">
+            {% if can_admin('support') %}<td><input class="form-check-input support-report-message-checkbox" type="checkbox" name="message_ids" value="{{ row['id'] }}" aria-label="Select message {{ row['id'] }}"></td>{% endif %}
+            <td class="text-nowrap">{{ row['created_at'] }}</td>
+            <td>{{ row['visitor_name'] }}<small class="d-block text-secondary">{{ row['visitor_email'] }}</small></td>
+            <td><span class="badge {{ 'bg-primary' if row['sender_role']=='visitor' else ('bg-info text-dark' if row['is_automated'] else 'bg-secondary') }}">{{ 'User message' if row['sender_role']=='visitor' else ('Auto-reply' if row['is_automated'] else 'Admin reply') }}</span></td>
+            <td>{{ row['admin_name'] or ('Automated' if row['is_automated'] else '—') }}</td>
+            <td><span class="badge {{ 'bg-success' if row['is_read'] else 'bg-warning text-dark' }}">{{ 'Read' if row['is_read'] else 'Unread' }}</span><small class="d-block">{{ row['status']|title }}</small></td>
+            <td class="text-break">{{ row['body'] }}</td>
+          </tr>
+          {% else %}
+          <tr data-support-report-empty><td colspan="{{ 7 if can_admin('support') else 6 }}" class="text-center text-secondary py-4">No messages match these filters.</td></tr>
+          {% endfor %}
+          {% if report['messages'] %}<tr data-support-report-no-results hidden><td colspan="{{ 7 if can_admin('support') else 6 }}" class="text-center text-secondary py-4">No messages match your search.</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% if can_admin('support') %}</form>{% endif %}
+  </section>
+  <script>
+  (() => {
+    const search = document.getElementById("support-report-search");
+    const count = document.getElementById("support-report-count");
+    const rows = Array.from(document.querySelectorAll("[data-support-report-row]"));
+    const noResults = document.querySelector("[data-support-report-no-results]");
+    const filterButtons = Array.from(document.querySelectorAll("[data-message-filter]"));
+    const selectVisible = document.getElementById("support-report-select-visible");
+    const deleteButton = document.getElementById("support-report-delete-button");
+    const selectedCount = document.getElementById("support-report-selected-count");
+    const checkboxes = Array.from(document.querySelectorAll(".support-report-message-checkbox"));
+    if (!search || !count) return;
+    const total = rows.length;
+    let activeFilter = "all";
+    const updateSelection = () => {
+      const selected = checkboxes.filter((checkbox) => checkbox.checked).length;
+      if (deleteButton) deleteButton.disabled = selected === 0;
+      if (selectedCount) selectedCount.textContent = `${selected} selected`;
+      if (selectVisible) {
+        const visible = checkboxes.filter((checkbox) => !checkbox.closest("tr").hidden);
+        const visibleSelected = visible.filter((checkbox) => checkbox.checked).length;
+        selectVisible.checked = visible.length > 0 && visibleSelected === visible.length;
+        selectVisible.indeterminate = visibleSelected > 0 && visibleSelected < visible.length;
+        selectVisible.disabled = visible.length === 0;
+      }
+    };
+    const applyFilters = () => {
+      const query = search.value.trim().toLocaleLowerCase();
+      let visible = 0;
+      rows.forEach((row) => {
+        const roleMatches = activeFilter === "all" ||
+          (row.dataset.senderRole === "visitor" && row.dataset.isRead === (activeFilter === "read" ? "1" : "0"));
+        const matches = roleMatches && row.textContent.toLocaleLowerCase().includes(query);
+        row.hidden = !matches;
+        if (!matches) {
+          const checkbox = row.querySelector(".support-report-message-checkbox");
+          if (checkbox) checkbox.checked = false;
+        }
+        if (matches) visible += 1;
+      });
+      if (noResults) noResults.hidden = visible > 0;
+      count.textContent = visible === total
+        ? `${total} matching message records`
+        : `${visible} of ${total} messages shown`;
+      updateSelection();
+    };
+    search.addEventListener("input", applyFilters);
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.messageFilter;
+        filterButtons.forEach((item) => {
+          const selected = item === button;
+          item.classList.toggle("is-active", selected);
+          item.setAttribute("aria-pressed", String(selected));
+        });
+        applyFilters();
+      });
+    });
+    checkboxes.forEach((checkbox) => checkbox.addEventListener("change", updateSelection));
+    if (selectVisible) {
+      selectVisible.addEventListener("change", () => {
+        checkboxes.forEach((checkbox) => {
+          if (!checkbox.closest("tr").hidden) checkbox.checked = selectVisible.checked;
+        });
+        updateSelection();
+      });
+    }
+  })();
+  </script>
+
+  <section class="admin-surface admin-table-wrap mb-4"><div class="admin-section-heading p-3 pb-0"><span class="admin-section-icon"><i class="bi bi-key"></i></span><div><h2>Key-value report</h2><p>{{ report['keys']|length }} saved auto-reply keys</p></div></div>
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0 adm-table"><thead><tr><th>Key</th><th>Automatic reply</th><th>Created</th><th>Updated</th></tr></thead><tbody>
+      {% for row in report['keys'] %}<tr><td><code>{{ row['keyword'] }}</code></td><td class="text-break">{{ row['reply'] }}</td><td>{{ row['created_at'] }}</td><td>{{ row['updated_at'] }}</td></tr>{% else %}<tr><td colspan="4" class="text-center text-secondary py-4">No saved keys found.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-6"><section class="admin-surface admin-table-wrap h-100"><div class="admin-section-heading p-3 pb-0"><span class="admin-section-icon"><i class="bi bi-shield-lock"></i></span><div><h2>Admin login report</h2><p>{{ report.logins|length }} matching events</p></div></div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0 adm-table"><thead><tr><th>Date</th><th>Admin</th><th>Role</th><th>Event</th><th>IP</th></tr></thead><tbody>{% for row in report.logins %}<tr><td>{{ row['created_at'] }}</td><td>{{ row['admin_name'] }}</td><td>{{ row['admin_role'] or '—' }}</td><td>{{ row['event_type']|title }}</td><td>{{ row['ip_address'] }}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-secondary py-4">No login records.</td></tr>{% endfor %}</tbody></table></div>
+    </section></div>
+    <div class="col-12 col-xl-6"><section class="admin-surface admin-table-wrap h-100"><div class="admin-section-heading p-3 pb-0"><span class="admin-section-icon"><i class="bi bi-activity"></i></span><div><h2>Admin activity report</h2><p>{{ report.activity|length }} matching actions</p></div></div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0 adm-table"><thead><tr><th>Date</th><th>Admin</th><th>Role</th><th>Action</th><th>Area</th></tr></thead><tbody>{% for row in report.activity %}<tr><td>{{ row['created_at'] }}</td><td>{{ row['admin_name'] }}</td><td>{{ row['admin_role'] or '—' }}</td><td>{{ row['action'] }}</td><td>{{ row['endpoint'] }}</td></tr>{% else %}<tr><td colspan="5" class="text-center text-secondary py-4">No activity records.</td></tr>{% endfor %}</tbody></table></div>
+    </section></div>
+  </div>
+</div>
+{% endblock %}

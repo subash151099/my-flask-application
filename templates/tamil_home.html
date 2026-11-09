@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ seo_title }}{% endblock %}
+{% block content %}
+<section class="container py-5">
+  <div class="mx-auto text-center" style="max-width: 820px">
+    <p class="text-uppercase fw-bold mb-2" style="color:#762b4b;letter-spacing:.12em">இருமணம்</p>
+    <h1 class="display-5 fw-bold mb-3">உங்கள் வாழ்க்கைத் துணையை நம்பிக்கையுடன் தேடுங்கள்</h1>
+    <p class="lead text-secondary mb-4">உங்கள் விருப்பங்களுக்கு ஏற்ற தமிழ் திருமணச் சுயவிவரங்களைப் பார்த்து, பாதுகாப்பான முறையில் உங்கள் திருமணப் பயணத்தைத் தொடங்குங்கள்.</p>
+    <a class="btn btn-lg text-white me-2" style="background:#762b4b" href="{{ url_for('register') }}">இலவசமாகப் பதிவு செய்யுங்கள்</a>
+    <a class="btn btn-lg btn-outline-secondary" href="{{ url_for('login') }}">உள்நுழைக</a>
+  </div>
+</section>
+<section class="container pb-5">
+  <div class="row g-4">
+    <div class="col-md-4"><article class="h-100 rounded-4 border p-4">
+      <h2 class="h4">உங்கள் சுயவிவரத்தை உருவாக்குங்கள்</h2>
+      <p class="text-secondary mb-0">உங்கள் விவரங்களையும் துணைத் தேர்வுகளையும் பதிவு செய்து, சரிபார்ப்புக்காகச் சமர்ப்பியுங்கள்.</p>
+    </article></div>
+    <div class="col-md-4"><article class="h-100 rounded-4 border p-4">
+      <h2 class="h4">பொருத்தமானவர்களைத் தேடுங்கள்</h2>
+      <p class="text-secondary mb-0">தேடல் மற்றும் பொருத்தங்கள் மூலம் உங்களுக்கு ஏற்ற உறுப்பினர் சுயவிவரங்களைப் பாருங்கள்.</p>
+    </article></div>
+    <div class="col-md-4"><article class="h-100 rounded-4 border p-4">
+      <h2 class="h4">ஆர்வத்தைத் தெரிவியுங்கள்</h2>
+      <p class="text-secondary mb-0">விருப்பமான சுயவிவரத்துக்கு ஆர்வத்தை அனுப்பி, உங்கள் கணக்கில் அதன் நிலையை அறியுங்கள்.</p>
+    </article></div>
+  </div>
+</section>
+<section class="container pb-5" aria-labelledby="tamil-faq-heading">
+  <h2 id="tamil-faq-heading" class="h3 mb-4">அடிக்கடி கேட்கப்படும் கேள்விகள்</h2>
+  <div class="accordion" id="tamilFaqs">
+    {% for faq in faqs %}
+    <article class="accordion-item">
+      <h3 class="accordion-header" id="tamilFaqHeading{{ loop.index }}">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tamilFaqAnswer{{ loop.index }}" aria-expanded="false" aria-controls="tamilFaqAnswer{{ loop.index }}">{{ faq.question }}</button>
+      </h3>
+      <div id="tamilFaqAnswer{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="tamilFaqHeading{{ loop.index }}" data-bs-parent="#tamilFaqs">
+        <div class="accordion-body">{{ faq.answer }}</div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "admin_base.html" %}
+{% block title %}Manage FAQs | Admin{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-question-circle"></i> Public content</span>
+      <h1>Frequently asked questions</h1>
+      <p>Add, update, or remove answers. Saved changes appear on the public homepage immediately.</p>
+    </div>
+    <a class="btn btn-outline-dark" href="{{ url_for('admin_dashboard') }}"><i class="bi bi-arrow-left me-1"></i> Dashboard</a>
+  </div>
+
+  <section class="admin-surface admin-faq-editor">
+    <div class="admin-section-heading">
+      <span class="admin-section-icon"><i class="bi bi-plus-lg"></i></span>
+      <div><h2>Add a FAQ</h2><p>Create a new question and answer for visitors.</p></div>
+    </div>
+    <form method="post" action="{{ url_for('admin_faqs') }}" class="row g-3">
+      <div class="col-12">
+        <label class="form-label" for="new-question">Question</label>
+        <input class="form-control" id="new-question" name="question" maxlength="250" required>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="new-answer">Answer</label>
+        <textarea class="form-control" id="new-answer" name="answer" rows="3" maxlength="5000" required></textarea>
+      </div>
+      <div class="col-12 text-end"><button class="btn btn-brand" type="submit"><i class="bi bi-plus-circle me-1"></i> Add FAQ</button></div>
+    </form>
+  </section>
+
+  <div class="admin-content-heading"><div><h2>Published FAQs</h2><p>{{ items|length }} question{{ '' if items|length == 1 else 's' }} on the website</p></div></div>
+  <div class="admin-faq-list">
+    {% for faq in items %}
+    <article class="admin-surface admin-faq-card">
+      <div class="admin-faq-card-head"><span class="admin-faq-number">{{ loop.index }}</span><div><h3>FAQ #{{ faq['id'] }}</h3><small>Updated {{ faq['updated_at'] }}</small></div></div>
+      <form method="post" action="{{ url_for('admin_faqs') }}" class="d-grid gap-3">
+        <input type="hidden" name="faq_id" value="{{ faq['id'] }}">
+        <div><label class="form-label" for="question-{{ faq['id'] }}">Question</label><input class="form-control" id="question-{{ faq['id'] }}" name="question" value="{{ faq['question'] }}" maxlength="250" required></div>
+        <div><label class="form-label" for="answer-{{ faq['id'] }}">Answer</label><textarea class="form-control" id="answer-{{ faq['id'] }}" name="answer" rows="3" maxlength="5000" required>{{ faq['answer'] }}</textarea></div>
+        <div class="d-flex justify-content-between gap-2 flex-wrap">
+          <button class="btn btn-brand" type="submit"><i class="bi bi-check2 me-1"></i> Save changes</button>
+          <button class="btn btn-outline-danger" type="submit" form="delete-faq-{{ faq['id'] }}" onclick="return confirm('Delete this FAQ from the public website?')"><i class="bi bi-trash me-1"></i> Delete</button>
+        </div>
+      </form>
+      <form id="delete-faq-{{ faq['id'] }}" method="post" action="{{ url_for('admin_faq_delete', faq_id=faq['id']) }}"></form>
+    </article>
+    {% else %}
+    <div class="admin-surface p-4 text-secondary">No FAQs are published. Use the form above to add the first one.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

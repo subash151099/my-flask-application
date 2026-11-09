@@ -1,0 +1,289 @@
+{% extends "admin_base.html" %}
+{% block title %}Admin Dashboard | Irumanam{% endblock %}
+{% block content %}
+<div class="admin-page">
+  <!-- Header -->
+  <div class="admin-page-heading">
+    <div>
+      <span class="admin-kicker"><i class="bi bi-grid-1x2-fill"></i> System management</span>
+      <h1>Admin dashboard</h1>
+      <p>Review member profiles, manage plans, and keep membership requests moving.</p>
+    </div>
+    {% if can_admin('payments') %}<a href="{{ url_for('admin_premium_payments') }}" class="btn btn-brand"><i class="bi bi-credit-card-2-front me-1"></i> Review premium payments</a>{% endif %}
+  </div>
+
+  <div class="row g-3 admin-overview-stats mb-4">
+    {% if can_admin('members') %}<div class="col-6 col-xl"><a class="admin-overview-card" href="{{ url_for('admin_dashboard', status='ALL') }}"><i class="bi bi-people"></i><span><b>{{ overview.total_users }}</b><small>Total users</small></span></a></div>{% endif %}
+    {% if can_admin('keys') %}<div class="col-6 col-xl"><a class="admin-overview-card" href="{{ url_for('admin_support_auto_replies') }}"><i class="bi bi-key"></i><span><b>{{ overview.total_keys }}</b><small>Auto-reply keys</small></span></a></div>{% endif %}
+    {% if can_admin('support') %}<div class="col-6 col-xl"><a class="admin-overview-card" href="{{ url_for('admin_support', status='ALL') }}"><i class="bi bi-chat-left-text"></i><span><b>{{ overview.total_messages }}</b><small>Support messages</small></span></a></div>
+    <div class="col-6 col-xl"><a class="admin-overview-card" href="{{ url_for('admin_support', status='OPEN') }}"><i class="bi bi-envelope-exclamation"></i><span><b>{{ overview.pending_messages }}</b><small>Pending messages</small></span></a></div>{% endif %}
+    {% if can_admin('activity') %}<div class="col-6 col-xl"><a class="admin-overview-card" href="{{ url_for('admin_activity') }}"><i class="bi bi-activity"></i><span><b>{{ overview.admin_activities }}</b><small>Admin activities</small></span></a></div>{% endif %}
+  </div>
+
+  {% if can_admin('support') %}
+  {% set chart_total = overview.total_messages or 1 %}
+  <section class="admin-surface admin-message-chart mb-4" aria-labelledby="support-chart-title">
+    <div class="admin-message-chart-head"><div><span class="admin-kicker"><i class="bi bi-bar-chart-line"></i> Support overview</span><h2 id="support-chart-title">Message activity</h2></div><a href="{{ url_for('admin_reports') if can_admin('reports') else url_for('admin_support') }}" class="btn btn-sm btn-outline-secondary">View details</a></div>
+    <div class="admin-message-chart-rows">
+      {% for label, count, color in [('User messages', overview.visitor_messages, 'visitor'), ('Automatic replies', overview.automated_replies, 'automatic'), ('Admin replies', overview.admin_replies, 'admin')] %}
+      <div class="admin-message-chart-row"><span>{{ label }}</span><div class="admin-message-chart-track" role="progressbar" aria-label="{{ label }}" aria-valuemin="0" aria-valuemax="{{ chart_total }}" aria-valuenow="{{ count }}"><span class="admin-message-chart-fill {{ color }}" style="width: {{ count / chart_total * 100 }}%"></span></div><b>{{ count }}</b></div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Status filters and operational overview -->
+  <div class="row g-3 admin-stats">
+    {% if can_admin('members') %}
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_dashboard', status='ALL') }}" class="adm-stat admin-stat position-relative {% if status_filter == 'ALL' %}active{% endif %}">
+        <span class="ico bg-primary-subtle text-primary"><i class="bi bi-people"></i></span>
+        <span><span class="num d-block">{{ counts.total }}</span><small>All members</small></span>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_dashboard', status='PENDING') }}" class="adm-stat admin-stat position-relative {% if status_filter == 'PENDING' %}active{% endif %}">
+        <span class="ico bg-warning-subtle text-warning-emphasis"><i class="bi bi-hourglass-split"></i></span>
+        <span><span class="num d-block">{{ counts.pending }}</span><small class="text-muted">Pending review</small></span>
+        {% if counts.pending %}<span class="badge bg-danger ms-auto">Needs action</span>{% endif %}
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_dashboard', status='APPROVED') }}" class="adm-stat admin-stat {% if status_filter == 'APPROVED' %}active{% endif %}">
+        <span class="ico bg-success-subtle text-success"><i class="bi bi-check-circle"></i></span>
+        <span><span class="num d-block">{{ counts.approved }}</span><small class="text-muted">Approved</small></span>
+      </a>
+    </div>
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_dashboard', status='REJECTED') }}" class="adm-stat admin-stat {% if status_filter == 'REJECTED' %}active{% endif %}">
+        <span class="ico bg-danger-subtle text-danger"><i class="bi bi-x-circle"></i></span>
+        <span><span class="num d-block">{{ counts.rejected }}</span><small class="text-muted">Rejected</small></span>
+      </a>
+    </div>
+    {% endif %}
+    {% if can_admin('payments') %}
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_premium_payments', status='PENDING') }}" class="adm-stat admin-stat admin-stat-payment">
+        <span class="ico"><i class="bi bi-credit-card-2-front"></i></span>
+        <span><span class="num d-block">{{ counts.payments_pending }}</span><small>Pending payments</small></span>
+      </a>
+    </div>
+    {% endif %}
+    {% if can_admin('support') %}
+    <div class="col-6 col-xl-2">
+      <a href="{{ url_for('admin_support', status='OPEN') }}" class="adm-stat admin-stat admin-stat-support">
+        <span class="ico"><i class="bi bi-headset"></i></span>
+        <span><span class="num d-block">{{ counts.support_open }}</span><small>Open support chats</small></span>
+        {% if support_unread_count %}<span class="badge bg-danger ms-auto">{{ support_unread_count }} new</span>{% endif %}
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="admin-dashboard-actions">
+    {% if logged_in_user['admin_role'] == 'SUPER_ADMIN' %}<a href="{{ url_for('admin_accounts') }}"><i class="bi bi-person-gear"></i><span><b>Admin accounts</b><small>Manage staff access and permissions</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('activity') %}<a href="{{ url_for('admin_activity') }}"><i class="bi bi-clock-history"></i><span><b>Activity &amp; login history</b><small>Review administrator actions</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('reports') %}<a href="{{ url_for('admin_reports') }}"><i class="bi bi-bar-chart-line"></i><span><b>Reports &amp; filters</b><small>Messages, keys and administrator history</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('notifications') %}<a href="{{ url_for('admin_notifications') }}"><i class="bi bi-bell"></i><span><b>Activity notifications</b><small>{{ admin_unread_count }} unread alerts</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('keys') %}<a href="{{ url_for('admin_support_auto_replies') }}"><i class="bi bi-chat-square-text"></i><span><b>Support auto-replies</b><small>Manage keyword responses</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('faqs') %}<a href="{{ url_for('admin_faqs') }}"><i class="bi bi-question-circle"></i><span><b>Manage FAQs</b><small>Keep public answers current</small></span><i class="bi bi-arrow-up-right"></i></a>{% endif %}
+    {% if can_admin('reports') %}<a href="{{ url_for('admin_reports_xlsx') }}"><i class="bi bi-file-earmark-excel"></i><span><b>Download reports</b><small>Export all records to Excel</small></span><i class="bi bi-download"></i></a>{% endif %}
+  </div>
+
+  {% if can_admin('activity') %}
+  <div class="row g-4 admin-recent-panels">
+    <div class="col-12 col-xl-7"><section class="admin-surface admin-table-wrap h-100"><div class="admin-section-heading p-3 pb-0"><span class="admin-section-icon"><i class="bi bi-activity"></i></span><div><h2>Recent admin activity</h2><p>Latest recorded administrative actions</p></div><a class="ms-auto small text-decoration-none" href="{{ url_for('admin_activity') }}">View all</a></div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0 adm-table adm-rt"><thead><tr><th>Admin</th><th>Action</th><th>Area</th><th>Date</th></tr></thead><tbody>
+      {% for item in recent_activities %}<tr><td data-label="Admin">{{ item['admin_name'] }}</td><td data-label="Action">{{ item['action'] }}</td><td data-label="Area">{{ item['endpoint'].replace('admin_', '').replace('_', ' ')|title }}</td><td class="text-nowrap" data-label="Date">{{ item['created_at'] }}</td>{% else %}<tr><td colspan="4" class="text-center text-secondary py-4">Admin actions will appear here.</td></tr>{% endfor %}
+      </tbody></table></div></section></div>
+    <div class="col-12 col-xl-5"><section class="admin-surface admin-table-wrap h-100"><div class="admin-section-heading p-3 pb-0"><span class="admin-section-icon"><i class="bi bi-shield-lock"></i></span><div><h2>Recent logins</h2><p>Latest administrator sign-ins</p></div></div>
+      <div class="table-responsive"><table class="table table-hover align-middle mb-0 adm-table adm-rt"><thead><tr><th>Admin</th><th>Event</th><th>Date</th></tr></thead><tbody>
+      {% for item in recent_logins %}<tr><td data-label="Admin">{{ item['admin_name'] }}<small class="d-block text-secondary">{{ item['admin_email'] }}</small></td><td data-label="Event"><span class="badge {{ 'bg-success' if item['event_type']=='login' else 'bg-secondary' }}">{{ item['event_type']|title }}</span></td><td class="text-nowrap" data-label="Date">{{ item['created_at'] }}</td>{% else %}<tr><td colspan="3" class="text-center text-secondary py-4">Login events will appear here.</td></tr>{% endfor %}
+      </tbody></table></div></section></div>
+  </div>
+  {% endif %}
+
+  {% if can_admin('members') %}
+  <!-- Search -->
+  <form method="get" class="admin-toolbar row g-2 align-items-center mb-3">
+    <input type="hidden" name="status" value="{{ status_filter }}">
+    <div class="col-12 col-md-8">
+      <div class="input-group">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="Search by name, Matrimony ID, email or mobile..." aria-label="Search profiles">
+      </div>
+    </div>
+    <div class="col-12 col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-brand flex-grow-1"><i class="bi bi-funnel me-1"></i> Filter</button>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+
+  {% if status_filter or query %}
+  <div class="small text-muted mb-2">
+    Showing
+    {% if status_filter %}<span class="badge text-bg-light border">{{ status_filter.title() }}</span>{% endif %}
+    {% if query %}<span class="badge text-bg-light border">“{{ query }}”</span>{% endif %}
+    profiles ·
+    <a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none">Clear filters</a>
+  </div>
+  {% endif %}
+
+  <!-- Profiles -->
+  <div class="card admin-surface admin-table-wrap">
+    <div class="card-body p-0">
+      <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap px-3 px-md-4 pt-3 pb-2">
+        <div class="fw-bold">Member profiles</div>
+        <span class="small text-secondary">{{ profiles|length }} result{{ '' if profiles|length == 1 else 's' }}{% if profiles|length == 100 %} · showing latest 100{% endif %}</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 adm-table adm-rt">
+          <thead class="table-light">
+            <tr>
+              <th>ID &amp; Name</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Plan</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in profiles %}
+            <tr>
+              <td class="adm-first">
+                <div class="d-flex align-items-center gap-2">
+                  <div class="adm-avatar">{{ (p['full_name'] or '?')[:1]|upper }}</div>
+                  <div>
+                    <div class="fw-bold"><a href="{{ url_for('admin_view_profile', user_id=p['id']) }}" class="text-decoration-none text-dark">{{ p['full_name'] }}</a></div>
+                    <small class="text-muted">{{ p['matrimony_id'] }} · Age: {{ calculate_age(p['date_of_birth']) }}</small>
+                  </div>
+                </div>
+              </td>
+              <td data-label="Contact">
+                <div>
+                  <small class="d-block text-break">{{ p['email'] }}</small>
+                  <small class="d-block">
+                    <span class="badge {{ 'bg-success' if p['email_format_valid'] else 'bg-danger' }}">Email {{ 'format valid' if p['email_format_valid'] else 'invalid format' }}</span>
+                    <span class="badge {{ 'bg-danger' if p['email_in_use'] else 'bg-success' }}">{{ 'Already used' if p['email_in_use'] else 'Unique' }}</span>
+                  </small>
+                  <small class="text-muted">{{ p['mobile'] }}</small>
+                  <small class="d-block">
+                    <span class="badge {{ 'bg-success' if p['mobile_format_valid'] else 'bg-danger' }}">Mobile {{ 'format valid' if p['mobile_format_valid'] else 'invalid format' }}</span>
+                    <span class="badge {{ 'bg-danger' if p['mobile_in_use'] else 'bg-success' }}">{{ 'Already used' if p['mobile_in_use'] else 'Unique' }}</span>
+                  </small>
+                </div>
+              </td>
+              <td data-label="Status">
+                <div>
+                  {% if p['is_approved'] == 'PENDING' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% elif p['is_approved'] == 'APPROVED' %}
+                    <span class="badge bg-success">Approved</span>
+                  {% else %}
+                    <span class="badge bg-danger" title="{{ p['rejection_reason'] }}">Rejected</span>
+                    <div class="small text-danger text-truncate" style="max-width: 150px;" title="{{ p['rejection_reason'] }}">{{ p['rejection_reason'] }}</div>
+                  {% endif %}
+                </div>
+              </td>
+              <td data-label="Plan">
+                <div>
+                  <span class="badge bg-info text-dark">{{ p['plan'] or 'FREE' }}</span>
+                  {% if p['plan_until'] %}<small class="d-block text-muted" style="font-size: 0.7rem;">Exp: {{ p['plan_until'] }}</small>{% endif %}
+                </div>
+              </td>
+              <td class="text-end" data-label="Actions">
+                <div class="d-flex justify-content-end gap-1 flex-wrap adm-actions">
+                  <a href="{{ url_for('admin_view_profile', user_id=p['id']) }}" class="btn btn-sm btn-outline-dark" title="View full profile"><i class="bi bi-eye"></i><span class="d-lg-none ms-1">View</span></a>
+
+                  {% if p['is_approved'] != 'APPROVED' %}
+                  <form method="post" action="{{ url_for('admin_profile_action', user_id=p['id']) }}" onsubmit="return confirm('Approve {{ p['full_name']|e }}?');">
+                    <input type="hidden" name="action" value="approve">
+                    <button class="btn btn-sm {{ 'btn-outline-secondary' if not p['email_format_valid'] or p['email_in_use'] or not p['mobile_format_valid'] or p['mobile_in_use'] else 'btn-success' }}" title="{{ 'Fix invalid or duplicate contact details before approval' if not p['email_format_valid'] or p['email_in_use'] or not p['mobile_format_valid'] or p['mobile_in_use'] else 'Approve profile' }}" {% if not p['email_format_valid'] or p['email_in_use'] or not p['mobile_format_valid'] or p['mobile_in_use'] %}disabled{% endif %}><i class="bi bi-check-lg"></i><span class="d-lg-none ms-1">Approve</span></button>
+                  </form>
+                  {% endif %}
+
+                  {% if p['is_approved'] != 'REJECTED' %}
+                  <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ p['id'] }}" title="Reject with reason"><i class="bi bi-x-lg"></i><span class="d-lg-none ms-1">Reject</span></button>
+                  {% endif %}
+
+                  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#subModal{{ p['id'] }}" title="Manage subscription"><i class="bi bi-star"></i><span class="d-lg-none ms-1">Plan</span></button>
+                </div>
+
+                <!-- Rejection Modal -->
+                <div class="modal fade text-start" id="rejectModal{{ p['id'] }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <form class="modal-content" method="post" action="{{ url_for('admin_profile_action', user_id=p['id']) }}">
+                      <input type="hidden" name="action" value="reject">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Reject profile: {{ p['full_name'] }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <label class="form-label small fw-semibold">Reason for rejection / correction needed</label>
+                        <textarea class="form-control" name="reason" rows="3" placeholder="e.g. Photo is unclear..." required></textarea>
+                        <div class="form-text">The member will see this reason so they can fix their profile.</div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger btn-sm">Confirm rejection</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <!-- Subscription Modal -->
+                <div class="modal fade text-start" id="subModal{{ p['id'] }}" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <form class="modal-content" method="post" action="{{ url_for('admin_profile_action', user_id=p['id']) }}">
+                      <input type="hidden" name="action" value="subscription">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Manage subscription: {{ p['full_name'] }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="small text-muted mb-3">
+                          Current plan: <span class="badge bg-info text-dark">{{ p['plan'] or 'FREE' }}</span>
+                          {% if p['plan_until'] %}· Expires {{ p['plan_until'] }}{% endif %}
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label small fw-semibold">Select plan</label>
+                          <select class="form-select" name="plan">
+                            <option value="FREE" {% if p['plan'] == 'FREE' %}selected{% endif %}>FREE</option>
+                            <option value="SILVER" {% if p['plan'] == 'SILVER' %}selected{% endif %}>SILVER (3 Months)</option>
+                            <option value="GOLD" {% if p['plan'] == 'GOLD' %}selected{% endif %}>GOLD (6 Months)</option>
+                            <option value="PLATINUM" {% if p['plan'] == 'PLATINUM' %}selected{% endif %}>PLATINUM (9 Months)</option>
+                            <option value="DIAMOND" {% if p['plan'] == 'DIAMOND' %}selected{% endif %}>DIAMOND (12 Months)</option>
+                          </select>
+                        </div>
+                        <div class="mb-1">
+                          <label class="form-label small fw-semibold">Duration extension (months)</label>
+                          <input type="number" class="form-control" name="months" value="3" min="1" max="24">
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary btn-sm">Update plan</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="adm-empty text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                No profiles found matching the criteria.
+                <div class="mt-2"><a href="{{ url_for('admin_dashboard') }}" class="btn btn-sm btn-outline-secondary">Reset filters</a></div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
